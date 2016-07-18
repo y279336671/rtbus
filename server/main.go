@@ -58,10 +58,11 @@ type Response struct {
 }
 
 func LineNumHandler(params martini.Params, r render.Render) {
+	r.Header().Set("Access-Control-Allow-Origin", "*")
+
 	bus, err := rtbus.NewBJBusSess()
 	if err != nil {
 		logger.Error("%v", err)
-
 		r.JSON(
 			502,
 			&Response{502, err.Error(), nil},
