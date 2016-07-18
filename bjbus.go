@@ -25,23 +25,23 @@ type BJBusSess struct {
 }
 
 type BusLine struct {
-	LineNum   string
-	Direction []*BusDirInfo
+	LineNum   string        `json:"linenum"`
+	Direction []*BusDirInfo `json:"direction"`
 }
 
 type BusDirInfo struct {
 	l          sync.Mutex
 	freshTime  int64
-	ID         string
-	Name       string
-	Stations   []*BusStation
-	Name2Index map[string]int
+	ID         string         `json:"id"`
+	Name       string         `json:"name"`
+	Stations   []*BusStation  `json:"stations"`
+	Name2Index map[string]int `json:"-"`
 }
 
 type BusStation struct {
-	ID     string
-	Name   string
-	Status string
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
 }
 
 type StationStatusResp struct {

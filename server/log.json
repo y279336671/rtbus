@@ -1,0 +1,5 @@
+{
+    "filename":"rtbus.log",
+    "daily":true,
+    "maxdays":7
+}
