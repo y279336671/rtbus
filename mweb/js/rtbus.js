@@ -1,4 +1,13 @@
 function putbusline(){
+    $('#loadingToast').show();
+
+    setTimeout(function () {
+        $('#loadingToast').hide();
+        $('#toast').show();
+        setTimeout(function () {
+            $('#toast').hide();
+        }, 1000);
+    }, 2000);
     console.log($("#rtbus_direction").val());
 }
 

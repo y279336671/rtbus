@@ -15,7 +15,6 @@ $(function () {
         },
         bind: function () {
             $.getScript("js/rtbus.js",function(){
-                
                 $('.container').on('change', '#rtbus_direction', showstation);
                 $('.container').on('blur', '#busline', getbusline);
                 $('.container').on('click', '#rtbus_add', putbusline);
