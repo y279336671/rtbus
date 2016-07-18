@@ -23,7 +23,7 @@ func main() {
 
 	m := martini.Classic()
 	m.Use(render.Renderer())
-	m.Get("/bjbus/direction/:linenum", LineNumHandler)
+	m.Get("/rtbus/bj/direction/:linenum", LineNumHandler)
 
 	m.RunOnAddr(":1315")
 }
