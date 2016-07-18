@@ -6,8 +6,8 @@ function putbusline(){
         $('#toast').show();
         setTimeout(function () {
             $('#toast').hide();
-        }, 1000);
-    }, 2000);
+        }, 1500);
+    }, 1000);
     console.log($("#rtbus_direction").val());
 }
 
