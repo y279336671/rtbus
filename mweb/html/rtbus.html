@@ -1,0 +1,36 @@
+<div class="hd">
+    <h1 class="page_title">实时公交</h1>
+    <p class="page_desc">请选择你查询公交线路</p>
+</div>
+<div class="bd">
+    <div class="weui_cells">
+        <div class="weui_cell">
+            <div class="weui_cell_hd"><label class="weui_label">线路</label></div>
+            <div class="weui_cell_bd weui_cell_primary">
+                <input id = "busline" class="weui_input" pattern=".*[0-9]+.*" placeholder="请输入公交线路"/>
+            </div>
+        </div>
+        <div class="weui_cell weui_cell_select weui_select_after">
+            <div class="weui_cell_hd">
+                <label for="" class="weui_label">方向</label>
+            </div>
+            <div class="weui_cell_bd weui_cell_primary">
+                <select class="weui_select" name="rtbus_direction" id="rtbus_direction" placeholder="请输入方向">
+                    <!-- <option value="1">通州李庄-左家庄</option>
+                    <option value="2">左家庄-通州李庄</option> -->
+                </select>
+            </div>
+        </div>
+        <div class="weui_cell weui_cell_select weui_select_after">
+            <div class="weui_cell_hd">
+                <label for="" class="weui_label">站点</label>
+            </div>
+            <div class="weui_cell_bd weui_cell_primary">
+                <select class="weui_select" name="rtbus_station" id="rtbus_station">
+                    <!-- <option value="1">通州李庄</option> -->
+                </select>
+            </div>
+        </div>
+        <a id="rtbus_add" class="weui_btn weui_btn_primary">增加</a>
+    </div>
+</div>
