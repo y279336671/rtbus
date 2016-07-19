@@ -2,53 +2,31 @@ package main
 
 import (
 	"flag"
-	"github.com/astaxie/beego/logs"
+	logger "github.com/bingbaba/util/logs"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 	"github.com/xuebing1110/rtbus/api"
-	"io/ioutil"
 )
 
 var (
-	logger *logs.BeeLogger
-	DEBUG  = flag.Bool("debug", false, "the debug module")
+	DEBUG = flag.Bool("debug", false, "the debug module")
 )
 
 func main() {
 	flag.Parse()
-	err := InitLog()
+
+	//init logger
+	err := logger.Init("log.json")
 	if err != nil {
 		panic(err)
 	}
 
+	//martini
 	m := martini.Classic()
 	m.Use(render.Renderer())
 	m.Get("/rtbus/bj/direction/:linenum", LineNumHandler)
 
 	m.RunOnAddr(":1315")
-}
-
-func InitLog() error {
-	log_conf := "./log.json"
-	bytes_conf, err := ioutil.ReadFile(log_conf)
-	if err != nil {
-		return err
-	}
-
-	logger = logs.NewLogger(1)
-	logger.EnableFuncCallDepth(true)
-	logger.SetLogFuncCallDepth(2)
-	logger.SetLogger("file", string(bytes_conf))
-
-	if *DEBUG {
-		logger.SetLevel(logs.LevelDebug)
-	} else {
-		logger.SetLevel(logs.LevelInfo)
-		logger.DelLogger("console")
-	}
-	logger.Info("startint...")
-
-	return nil
 }
 
 type Response struct {
