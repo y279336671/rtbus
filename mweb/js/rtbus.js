@@ -23,6 +23,7 @@ function getbusline(){
         busline_cfg = $.ajax({
             type:"GET",
             url:"http://api.bingbaba.com/rtbus/bj/direction/"+busline,
+            headers:{Referer:"http://m.bingbaba.com"},
             success:function(data){
                 businfo = data.data;
                 $("#rtbus_direction").empty();
