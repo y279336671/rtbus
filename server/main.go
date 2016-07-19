@@ -2,24 +2,26 @@ package main
 
 import (
 	"flag"
-	logger "github.com/bingbaba/util/logs"
+	"github.com/bingbaba/util/logs"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 	"github.com/xuebing1110/rtbus/api"
 )
 
 var (
-	DEBUG = flag.Bool("debug", false, "the debug module")
+	logger *logs.Blogger
+	DEBUG  = flag.Bool("debug", false, "the debug module")
 )
 
 func main() {
 	flag.Parse()
 
 	//init logger
-	err := logger.Init("log.json")
+	err := logs.Init("log.json")
 	if err != nil {
 		panic(err)
 	}
+	logger = logs.GetBlogger()
 
 	//martini
 	m := martini.Classic()

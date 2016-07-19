@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bingbaba/util/httptool"
+	"github.com/bingbaba/util/logs"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -270,11 +271,13 @@ func (b *BJBusSess) newHttpRequest(req_url string) (*http.Request, error) {
 }
 
 func (b *BJBusSess) Print() {
+	logger := logs.GetBlogger()
+
 	for _, busline := range b.BusLines {
 
 		for _, busdir := range busline.Direction {
 			last_index := len(busdir.Stations)
-			fmt.Printf("lineNum:%s Direction:%s Station:%s ~ %s\n",
+			logger.Info("lineNum:%s Direction:%s Station:%s ~ %s\n",
 				busline.LineNum,
 				busdir.Name,
 				busdir.Stations[0].Name,
@@ -283,10 +286,9 @@ func (b *BJBusSess) Print() {
 
 			for _, station := range busdir.Stations {
 				if station.Status != "" {
-					fmt.Printf("%s:%s %s\n", station.ID, station.Name, station.Status)
+					logger.Info("%s:%s %s\n", station.ID, station.Name, station.Status)
 				}
 			}
-			fmt.Println()
 		}
 	}
 }
