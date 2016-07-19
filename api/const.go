@@ -1,4 +1,4 @@
-package rtbus
+package api
 
 const (
 	//URL_BJ_HOME               = "http://www.bjbus.com/home/fun_rtbus.php"

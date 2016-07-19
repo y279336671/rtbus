@@ -1,4 +1,4 @@
-package rtbus
+package api
 
 import (
 	"testing"

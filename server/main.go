@@ -5,7 +5,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
-	"github.com/xuebing1110/rtbus"
+	"github.com/xuebing1110/rtbus/api"
 	"io/ioutil"
 )
 
@@ -58,9 +58,7 @@ type Response struct {
 }
 
 func LineNumHandler(params martini.Params, r render.Render) {
-	r.Header().Set("Access-Control-Allow-Origin", "*")
-
-	bus, err := rtbus.NewBJBusSess()
+	bus, err := api.NewBJBusSess()
 	if err != nil {
 		logger.Error("%v", err)
 		r.JSON(
