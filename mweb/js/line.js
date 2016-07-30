@@ -31,10 +31,6 @@ function renderLineInfo(){
                 $("#"+divid).find("span").html(station.name);
                 console.log($("#"+divid));
 
-                if (i === 2 || i===5) {
-                    station.status = "1";
-                }
-
                 if (station.status != ""){
                     $("#"+divid).addClass("cd-bus");
                     $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
