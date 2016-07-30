@@ -2,7 +2,7 @@ function renderLineInfo(){
     var linenum = $.getUrlParam('linenum');
     var uid = $.getUrlParam('uid');
     var dirid = $.getUrlParam('dirid');
-    console.log(linenum);
+    // console.log(linenum);
 
     $('#loadingToast').show();
     $.ajax({
@@ -22,23 +22,23 @@ function renderLineInfo(){
         <img src=\"vendor/images/cd-icon-location.svg\" alt=\"Picture\">\
     </div>\
     <div class=\"cd-timeline-content\">\
-        <h2>未到站</h2>\
-        <span class=\"cd-date\"></span>\
+        <h2></h2>\
+        <span class=\"cd-date\">未到站</span>\
     </div>\
 </div>";
                 $("#cd-timeline").append(div);
 
-                $("#"+divid).find("span").html(station.name);
-                console.log($("#"+divid));
+                $("#"+divid).find("h2").html(station.name);
+                // console.log($("#"+divid));
 
                 if (station.status != ""){
                     $("#"+divid).addClass("cd-bus");
                     $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
 
                     if(station.status == "0.5"){
-                        $("#"+divid).find("h2").html("即将到站");
+                        $("#"+divid).find("span").html("即将到站");
                     }else if(station.status == "1"){
-                        $("#"+divid).find("h2").html("到站");
+                        $("#"+divid).find("span").html("到站");
                     }
                 }else {
                     // $("#"+divid).find(".cd-timeline-content").hide();
