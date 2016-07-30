@@ -9,6 +9,7 @@ function renderLineInfo(){
         type:"GET",
         url:"http://api.bingbaba.com/rtbus/bj/info/"+linenum+"/"+dirid,
         // url:"http://127.0.0.1:1315/rtbus/bj/info/"+linenum+"/"+dirid,
+        contentType:"application/x-www-form-urlencoded; charset=utf-8",
         success:function(data){
             businfo = data.data;
             $("#cd-timeline").empty();

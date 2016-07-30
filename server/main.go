@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
+	// "fmt"
 	"github.com/bingbaba/util/logs"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 	"github.com/xuebing1110/rtbus/api"
+	// "net/url"
 )
 
 var (
@@ -55,6 +57,9 @@ func LineInfoHandler(params martini.Params, r render.Render) {
 		)
 		return
 	}
+
+	// linenum, _ := url.QueryUnescape(params["linenum"])
+	// fmt.Println(params["linenum"])
 
 	stations, err := BusSess.GetLineInfo(params["linenum"], params["direction"])
 	if err != nil {
