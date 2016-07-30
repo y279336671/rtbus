@@ -2,6 +2,7 @@ function renderLineInfo(){
     var linenum = $.getUrlParam('linenum');
     var uid = $.getUrlParam('uid');
     var dirid = $.getUrlParam('dirid');
+    var sid = $.getUrlParam('sid');
     // console.log(linenum);
 
     $('#loadingToast').show();
@@ -49,6 +50,10 @@ function renderLineInfo(){
             }
 
             $('#loadingToast').hide();
+            if(sid > 0){
+                var t = $("#station_"+sid).offset().top;
+                $("html,body").scrollTop(t);
+            }
         }
     })
 
