@@ -1,11 +1,14 @@
 package api
 
 import (
+	"github.com/bingbaba/util/logs"
 	"testing"
 	"time"
 )
 
 func TestGetBusLineDirection(t *testing.T) {
+	logs.SetDebug(true)
+
 	bus, err := NewBJBusSess()
 	if err != nil {
 		t.Fatal(err)
@@ -27,7 +30,6 @@ func TestGetBusLineDirection(t *testing.T) {
 		}
 
 		bus.Print()
-
 		time.Sleep(time.Second * 15)
 
 	}

@@ -15,12 +15,11 @@ function putbusline(){
 var busline,businfo,busdir;
 
 function getbusline(){
-    if (busline != $("#busline").val()) {
+    if (busline != $("#busline").val() && $("#busline").val() != "") {
         busline = $("#busline").val();
-        console.log(busline);
 
-
-        busline_cfg = $.ajax({
+        $('#loadingToast').show();
+        $.ajax({
             type:"GET",
             url:"http://api.bingbaba.com/rtbus/bj/direction/"+busline,
             success:function(data){
@@ -39,6 +38,7 @@ function getbusline(){
                 }
 
                 showstation();
+                $('#loadingToast').hide();
             }
         })
     }
@@ -47,6 +47,7 @@ function getbusline(){
 function showstation(){
     direction = $("#rtbus_direction").val()
 
+    $('#loadingToast').show();
     for (var i=0;i<businfo.direction.length;i++) {
         busdir = businfo.direction[i];
         if(busdir.id === direction){
@@ -59,4 +60,5 @@ function showstation(){
             break
         }
     }
+    $('#loadingToast').hide();
 }

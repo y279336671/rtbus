@@ -6,7 +6,7 @@ $(function () {
         leaveTimeout: 250
     });
 
-    // grid
+    // add
     var home = {
         url: '/',
         className: 'home',
@@ -22,7 +22,23 @@ $(function () {
         }
     };
 
+    //line
+    var line = {
+        url:'/line',
+        className:'line',
+        render: function () {
+            $('#container').append("<section id=\"cd-timeline\" class=\"cd-container\"></section>");
+        },
+        bind: function () {
+            $.getScript("js/line.js",function(){
+                renderLineInfo();
+            });
+
+        }
+    }
+
     router.push(home)
+        .push(line)
         .setDefault('/')
         .init();
 
@@ -41,5 +57,11 @@ $(function () {
                 }, 0);
             }
         })
+    }
+
+    $.getUrlParam = function(name) {  
+        var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");  
+        var r = window.location.search.substr(1).match(reg);  
+        if (r!=null) return unescape(r[2]); return null;  
     }
 });

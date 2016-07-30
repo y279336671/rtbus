@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	logger *logs.Blogger
-	DEBUG  = flag.Bool("debug", false, "the debug module")
+	logger  *logs.Blogger
+	DEBUG   = flag.Bool("debug", false, "the debug module")
+	BusSess *api.BJBusSess
 )
 
 func main() {
@@ -27,8 +28,17 @@ func main() {
 	m := martini.Classic()
 	m.Use(render.Renderer())
 	m.Get("/rtbus/bj/direction/:linenum", LineNumHandler)
+	m.Get("/rtbus/bj/info/:linenum/:direction", LineInfoHandler)
 
 	m.RunOnAddr(":1315")
+}
+
+func init() {
+	var err error
+	BusSess, err = api.NewBJBusSess()
+	if err != nil {
+		panic(err)
+	}
 }
 
 type Response struct {
@@ -37,29 +47,57 @@ type Response struct {
 	Data   interface{} `json:"data,omitempty"`
 }
 
+func LineInfoHandler(params martini.Params, r render.Render) {
+	if BusSess == nil {
+		r.JSON(
+			502,
+			&Response{502, "bjbus sess token error", nil},
+		)
+		return
+	}
+
+	stations, err := BusSess.GetLineInfo(params["linenum"], params["direction"])
+	if err != nil {
+		logger.Error("%v", err)
+
+		r.JSON(
+			502,
+			&Response{503, err.Error(), nil},
+		)
+		return
+	}
+
+	r.JSON(200,
+		&Response{
+			0,
+			"OK",
+			stations,
+		},
+	)
+
+}
+
 func LineNumHandler(params martini.Params, r render.Render) {
-	bus, err := api.NewBJBusSess()
-	if err != nil {
-		logger.Error("%v", err)
+	if BusSess == nil {
 		r.JSON(
-			502,
-			&Response{502, err.Error(), nil},
+			504,
+			&Response{504, "bjbus sess token error", nil},
 		)
 		return
 	}
 
-	err = bus.LoadBusLineConf(params["linenum"])
+	err := BusSess.LoadBusLineConf(params["linenum"])
 	if err != nil {
 		logger.Error("%v", err)
 
 		r.JSON(
 			502,
-			&Response{502, err.Error(), nil},
+			&Response{505, err.Error(), nil},
 		)
 		return
 	}
 
-	busline := bus.BusLines[params["linenum"]]
+	busline := BusSess.BusLines[params["linenum"]]
 	r.JSON(200,
 		&Response{
 			0,

@@ -68,12 +68,17 @@ func (b *BJBusSess) FreshToken() error {
 	b.l.Lock()
 	defer b.l.Unlock()
 
+	curtime := time.Now().Unix()
+	if time.Duration(curtime-b.tokentime)*time.Second < 30*time.Minute {
+		return nil
+	}
+
 	var err error
 	b.token, err = getToken()
 	if err != nil {
 		return err
 	}
-	b.tokentime = time.Now().Unix()
+	b.tokentime = curtime
 
 	return nil
 }
@@ -99,25 +104,38 @@ func (b *BJBusSess) LoadBusLineConf(linenum string) error {
 }
 
 func (b *BJBusSess) FreshStatus(linenum, direction string) error {
-	busline, found := b.BusLines[linenum]
-	if !found {
-		err := b.LoadBusLineConf(linenum)
-		if err != nil {
-			return err
-		}
-		busline = b.BusLines[linenum]
+	err := b.FreshToken()
+	if err != nil {
+		return err
 	}
 
-	for _, busdir := range busline.Direction {
-		if busdir.Name != direction && busdir.ID != direction {
-			continue
-		}
+	busdir, err_tmp := b.getBusDir(linenum, direction)
+	if err_tmp != nil {
+		return err_tmp
+	}
 
-		err_tmp := b.freshStatus(linenum, busdir)
-		if err_tmp != nil {
-			return err_tmp
-		}
-		break
+	err_tmp = b.freshStatus(linenum, busdir)
+	if err_tmp != nil {
+		return err_tmp
+	}
+
+	return nil
+}
+
+func (b *BJBusSess) FreshStatusByStation(linenum, direction, station string) error {
+	err := b.FreshToken()
+	if err != nil {
+		return err
+	}
+
+	busdir, err_tmp := b.getBusDir(linenum, direction)
+	if err_tmp != nil {
+		return err_tmp
+	}
+
+	err_tmp = b.freshStatus(linenum, busdir)
+	if err_tmp != nil {
+		return err_tmp
 	}
 
 	return nil
@@ -268,6 +286,47 @@ func (b *BJBusSess) newHttpRequest(req_url string) (*http.Request, error) {
 	httpreq.Header.Add("X-Requested-With", "XMLHttpRequest")
 
 	return httpreq, nil
+}
+
+func (b *BJBusSess) GetLineInfo(linenum, direction string) ([]*BusStation, error) {
+	err := b.FreshStatus(linenum, direction)
+	if err != nil {
+		return nil, err
+	}
+
+	busdir, err2 := b.getBusDir(linenum, direction)
+	if err2 != nil {
+		return nil, err2
+	}
+
+	return busdir.Stations, nil
+
+}
+
+func (b *BJBusSess) getBusDir(linenum, direction string) (*BusDirInfo, error) {
+	busline, found := b.BusLines[linenum]
+	if !found {
+		err := b.LoadBusLineConf(linenum)
+		if err != nil {
+			return nil, err
+		}
+		busline = b.BusLines[linenum]
+	}
+
+	for _, busdir := range busline.Direction {
+		if busdir.Name != direction && busdir.ID != direction {
+			continue
+		}
+
+		err_tmp := b.freshStatus(linenum, busdir)
+		if err_tmp != nil {
+			return nil, err_tmp
+		}
+
+		return busdir, nil
+	}
+
+	return nil, errors.New("not found")
 }
 
 func (b *BJBusSess) Print() {
