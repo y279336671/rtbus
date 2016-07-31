@@ -30,7 +30,12 @@ function renderLineInfo(){
 </div>";
                 $("#cd-timeline").append(div);
 
-                $("#"+divid).find("h2").html(station.name);
+                if(sid > 0 && sid === station.id){
+                    $("#"+divid).find("h2").html(station.name+"（本站）");
+                    $("#station_"+sid).addClass("cd-mylocation");
+                }else{
+                    $("#"+divid).find("h2").html(station.name);
+                }
                 // console.log($("#"+divid));
 
                 if (station.status != ""){
@@ -49,14 +54,12 @@ function renderLineInfo(){
                 // console.log($("#cd-timeline"));
             }
 
-            $('#loadingToast').hide();
+            //锚点跳到响应位置
             if(sid > 0){
-                var dsid = "#station_"+sid;
-                $("#station_"+sid).addClass("cd-mylocation");
-
                 var t = $("#station_"+(sid-1)).offset().top;
                 $("#container").scrollTop(t);
             }
+            $('#loadingToast').hide();
         }
     })
 
