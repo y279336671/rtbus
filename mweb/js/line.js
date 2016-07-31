@@ -62,7 +62,7 @@ function renderLineInfo(){
                         $("#"+lastid).addClass("cd-bus");
                         $("#"+lastid).find("img").attr("src","vendor/images/bus2.png");
 
-                        $("#"+lastid).find("h2").html("在路上...");
+                        $("#"+lastid).find("h2").html("即将到站...");
                     }
 
                     //未到站 站点
