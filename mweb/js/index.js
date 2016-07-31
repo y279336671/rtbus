@@ -27,7 +27,8 @@ $(function () {
         url:'/line',
         className:'line',
         render: function () {
-            $('#container').append("<section id=\"cd-timeline\" class=\"cd-container\"></section>");
+            return $('#container').load('html/line.html');
+            // $('#container').append("<section id=\"cd-timeline\" class=\"cd-container\"></section>");
         },
         bind: function () {
             $.getScript("js/line.js",function(){
