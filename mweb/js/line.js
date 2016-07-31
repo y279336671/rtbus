@@ -63,7 +63,10 @@ function renderLineInfo(){
 
             //锚点跳到响应位置
             if(sid > 0){
-                var t = $("#cd-timeline").find("#station_"+(sid-1)).offset().top;
+                var t = $("#container").attr("scrollTop");
+                if(t <= 1){
+                    t = $("#cd-timeline").find("#station_"+(sid-1)).offset().top;
+                }
                 console.log(t);
                 $("#container").scrollTop(t);
             }
