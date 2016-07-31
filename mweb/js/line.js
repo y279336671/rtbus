@@ -51,7 +51,10 @@ function renderLineInfo(){
 
             $('#loadingToast').hide();
             if(sid > 0){
-                var t = $("#station_"+sid).offset().top;
+                var dsid = "#station_"+sid;
+                $("#station_"+sid).addClass("cd-mylocation");
+
+                var t = $("#station_"+(sid-1)).offset().top;
                 $("#container").scrollTop(t);
             }
         }
