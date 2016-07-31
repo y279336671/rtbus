@@ -41,8 +41,8 @@ function renderLineInfo(){
                     div = "<div id=\""+divid+divf;
                     $("#cd-timeline").append(div);
 
+                    $("#"+divid).find("h2").html(station.name);
                     if(sid > 0 && sid === station.id){
-                        $("#"+divid).find("h2").html(station.name+"(本站)");
                         $("#"+divid).addClass("cd-mylocation");
                     }else {
                         $("#"+divid).find("h2").html(station.name);
@@ -69,11 +69,9 @@ function renderLineInfo(){
                     div = "<div id=\""+divid+divf;
                     $("#cd-timeline").append(div);
 
+                    $("#"+divid).find("h2").html(station.name);
                     if(sid > 0 && sid === station.id){
-                        $("#"+divid).find("h2").html(station.name+"(本站)");
                         $("#station_"+sid).addClass("cd-mylocation");
-                    }else {
-                        $("#"+divid).find("h2").html(station.name);
                     }
                 }
 
