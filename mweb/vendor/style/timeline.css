@@ -225,15 +225,15 @@ a.cd-read-more:hover{text-decoration:none; background-color: #424242;  }
 @media only screen and (min-width: 768px) {
   .cd-timeline-content h2 {
     font-size: 18px;
-    font-size: 1.25rem;
+    font-size: 1rem;
   }
   .cd-timeline-content p {
     font-size: 14px;
-    font-size: 1rem;
+    font-size: 0.8rem;
   }
   .cd-timeline-content .cd-read-more, .cd-timeline-content .cd-date {
     font-size: 12px;
-    font-size: 0.875rem;
+    font-size: 0.775rem;
   }
 }
 @media only screen and (min-width: 1170px) {
