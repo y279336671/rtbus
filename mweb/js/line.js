@@ -44,12 +44,12 @@ function renderLineInfo(){
                     $("#"+divid).find("h2").html(station.name);
                     if(sid > 0 && sid === station.id){
                         $("#"+divid).addClass("cd-mylocation");
+                        $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
                     }else {
                         $("#"+divid).find("h2").html(station.name);
                         $("#"+divid).addClass("cd-bus");
                         $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
                     }
-                    $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
                 }else {
                     //即将到站
                     if(station.status == "0.5"){
