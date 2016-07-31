@@ -5,6 +5,12 @@ function renderLineInfo(){
     var sid = $.getUrlParam('sid');
     // console.log(linenum);
 
+    //参数错误
+    if(linenum == "" || dirid == ""){
+        return
+    }
+
+    //渲染
     $('#loadingToast').show();
     $.ajax({
         type:"GET",
@@ -13,6 +19,7 @@ function renderLineInfo(){
         contentType:"application/x-www-form-urlencoded; charset=utf-8",
         success:function(data){
             businfo = data.data;
+
             $("#cd-timeline").empty();
             for (var i=0;i<businfo.length;i++) {
                 station = businfo[i]
@@ -31,7 +38,7 @@ function renderLineInfo(){
                 $("#cd-timeline").append(div);
 
                 if(sid > 0 && sid === station.id){
-                    $("#"+divid).find("h2").html(station.name+"（本站）");
+                    $("#"+divid).find("h2").html(station.name+"(本站)");
                     $("#station_"+sid).addClass("cd-mylocation");
                 }else{
                     $("#"+divid).find("h2").html(station.name);
@@ -56,11 +63,15 @@ function renderLineInfo(){
 
             //锚点跳到响应位置
             if(sid > 0){
-                var t = $("#station_"+(sid-1)).offset().top;
+                var t = $("#cd-timeline").find("#station_"+(sid-1)).offset().top;
+                console.log(t);
                 $("#container").scrollTop(t);
             }
             $('#loadingToast').hide();
+
+
+            //继续刷新
+            setTimeout(renderLineInfo,10100);
         }
     })
-
 }
