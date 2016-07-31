@@ -52,7 +52,7 @@ function renderLineInfo(){
             $('#loadingToast').hide();
             if(sid > 0){
                 var t = $("#station_"+sid).offset().top;
-                $("html,body").scrollTop(t);
+                $("#container").scrollTop(t);
             }
         }
     })
