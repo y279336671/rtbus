@@ -67,7 +67,7 @@ function renderLineInfo(){
                 if(t <= 1){
                     t = $("#cd-timeline").find("#station_"+(sid-1)).offset().top;
                 }
-                console.log(t);
+                // console.log(t);
                 $("#container").scrollTop(t);
             }
             $('#loadingToast').hide();

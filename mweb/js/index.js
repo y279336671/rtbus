@@ -11,7 +11,7 @@ $(function () {
         url: '/',
         className: 'home',
         render: function () {
-            return $('#container').load('html/rtbus.html');
+            $('#container').load('html/rtbus.html');
         },
         bind: function () {
             $.getScript("js/rtbus.js",function(){
@@ -27,7 +27,7 @@ $(function () {
         url:'/line',
         className:'line',
         render: function () {
-            return $('#container').load('html/line.html');
+            $('#container').load('html/line.html');
             // $('#container').append("<section id=\"cd-timeline\" class=\"cd-container\"></section>");
         },
         bind: function () {
