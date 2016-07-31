@@ -103,13 +103,22 @@ Main components
 
 .cd-timeline-content h2 {
   color: #7f8c97;
-  font-weight: 200;
+  font-weight: 400;
+}
+
+.cd-timeline-content span {
+  color: rgb(21,119,195);
+  font-weight: 900;
+}
+
+.cd-mylocation .cd-timeline-content span {
+  color: #c03b44;
 }
 
 .cd-bus .cd-timeline-content h2 {
   color: rgb(21,119,195);
-  font-weight: 300;
 }
+
 .cd-mylocation .cd-timeline-content h2 {
   color: #c03b44;
   font-weight: 250;

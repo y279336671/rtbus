@@ -25,38 +25,58 @@ function renderLineInfo(){
                 station = businfo[i]
                 
                 var divid = "station_"+station.id;
-                var div = "<div id=\""+divid+
-"\" class=\"cd-timeline-block\">\
-    <div class=\"cd-timeline-img\">\
-        <img src=\"vendor/images/cd-icon-location.svg\" alt=\"Picture\">\
-    </div>\
-    <div class=\"cd-timeline-content\">\
-        <h2></h2>\
-        <span class=\"cd-date\">未到站</span>\
-    </div>\
-</div>";
-                $("#cd-timeline").append(div);
+                var divh = "<div id=\""+divid;
+                var divf= "\" class=\"cd-timeline-block\">\
+                    <div class=\"cd-timeline-img\">\
+                        <img src=\"vendor/images/cd-icon-location.svg\" alt=\"Picture\">\
+                    </div>\
+                    <div class=\"cd-timeline-content\">\
+                        <h2></h2>\
+                    </div>\
+                </div>";
+                // <span class=\"cd-date\">未到站</span>
 
-                if(sid > 0 && sid === station.id){
-                    $("#"+divid).find("h2").html(station.name+"(本站)");
-                    $("#station_"+sid).addClass("cd-mylocation");
-                }else{
-                    $("#"+divid).find("h2").html(station.name);
-                }
-                // console.log($("#"+divid));
+                //到站
+                if(station.status == "1") {
+                    div = "<div id=\""+divid+divf;
+                    $("#cd-timeline").append(div);
 
-                if (station.status != ""){
-                    $("#"+divid).addClass("cd-bus");
-                    $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
-
-                    if(station.status == "0.5"){
-                        $("#"+divid).find("span").html("即将到站");
-                    }else if(station.status == "1"){
-                        $("#"+divid).find("span").html("到站");
+                    if(sid > 0 && sid === station.id){
+                        $("#"+divid).find("h2").html(station.name+"(本站)");
+                        $("#"+divid).addClass("cd-mylocation");
+                    }else {
+                        $("#"+divid).find("h2").html(station.name);
+                        $("#"+divid).addClass("cd-bus");
+                        $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
                     }
+                    $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
                 }else {
-                    // $("#"+divid).find(".cd-timeline-content").hide();
+                    //即将到站
+                    if(station.status == "0.5"){
+                        var lastsid = station.id-1;
+                        var lastid = "station_"+lastsid+"_5";
+
+                        div = "<div id=\""+lastid+divf;
+                        $("#cd-timeline").append(div);
+
+                        $("#"+lastid).addClass("cd-bus");
+                        $("#"+lastid).find("img").attr("src","vendor/images/bus2.png");
+
+                        $("#"+lastid).find("h2").html("即将到站");
+                    }
+
+                    //未到站 站点
+                    div = "<div id=\""+divid+divf;
+                    $("#cd-timeline").append(div);
+
+                    if(sid > 0 && sid === station.id){
+                        $("#"+divid).find("h2").html(station.name+"(本站)");
+                        $("#station_"+sid).addClass("cd-mylocation");
+                    }else {
+                        $("#"+divid).find("h2").html(station.name);
+                    }
                 }
+
                 // console.log($("#"+divid));
                 // console.log($("#cd-timeline"));
             }
