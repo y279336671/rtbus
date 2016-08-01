@@ -5,6 +5,7 @@
 }
 
 .cd-container {
+  line-height:0.8;
   color: #7f8c97;
   /*background-color: #e9f0f5;*/
 }
@@ -40,8 +41,8 @@ Main components
 #cd-timeline {
   position: relative;
   padding: 2em 0;
-  margin-top: 2em;
-  margin-bottom: 2em;
+  margin-top: 0em;
+  margin-bottom: 1em;
 }
 #cd-timeline::before {
   /* this is the vertical line */
@@ -177,7 +178,7 @@ Main components
   margin-left: 60px;
   background: white;
   border-radius: 0.25em;
-  padding: 1em;
+  padding: 0.8em;
   box-shadow: 0 3px 0 #d7e4ed;
 }
 .cd-timeline-content:after {
