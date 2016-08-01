@@ -12,9 +12,26 @@ function putbusline(){
 }
 
 function gotoline(){
+    //公交线
     var linenum = $("#busline").val();
+    if(linenum == ""){
+        $("#busline").focus();
+        return
+    }
+
+    //方向
     var dirid = $("#rtbus_direction").val();
+    if(dirid == ""){
+        $("#rtbus_direction").focus();
+        return
+    }
+
+    //公交站
     var sid = $("#rtbus_station").val();
+    if(sid == ""){
+        $("#rtbus_station").focus();
+        return
+    }
     location.href = "index.html?linenum="+linenum+"&dirid="+dirid+"&sid="+sid+"#/line";
 }
 
