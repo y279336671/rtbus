@@ -11,6 +11,13 @@ function putbusline(){
     console.log($("#rtbus_direction").val());
 }
 
+function gotoline(){
+    var linenum = $("#busline").val();
+    var dirid = $("#rtbus_direction").val();
+    var sid = $("#rtbus_station").val();
+    location.href = "index.html?linenum="+linenum+"&dirid="+dirid+"&sid="+sid+"#/line";
+}
+
 //全局变量
 var busline,businfo,busdir;
 

@@ -39,6 +39,10 @@ function renderLineInfo(){
 
             //继续刷新
             setTimeout(renderLineInfo,10100);
+        },
+        error: function(){
+            $('#loadingToast').hide();
+            setTimeout(renderLineInfo,10100);
         }
     })
 }
