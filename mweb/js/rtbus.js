@@ -14,7 +14,7 @@ function putbusline(){
 function gotoline(){
     //公交线
     var linenum = $("#busline").val();
-    if(linenum == ""){
+    if(linenum === ""){
         $("#busline").focus();
         return
     }
