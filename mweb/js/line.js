@@ -36,40 +36,27 @@ function renderLineInfo(){
                 </div>";
                 // <span class=\"cd-date\">未到站</span>
 
+
+                var div = "<div id=\""+divid+divf;
+                $("#cd-timeline").append(div);
+                $("#"+divid).find("h2").html(station.name);
+
                 //到站
                 if(station.status == "1") {
-                    div = "<div id=\""+divid+divf;
-                    $("#cd-timeline").append(div);
-
-                    $("#"+divid).find("h2").html(station.name);
                     if(sid > 0 && sid === station.id){
                         $("#"+divid).addClass("cd-mylocation");
                         $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
                     }else {
-                        $("#"+divid).find("h2").html(station.name);
                         $("#"+divid).addClass("cd-bus");
                         $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
                     }
+                }else if(station.status == "0.5"){ //即将到站
+                    $("#"+lastid).addClass("cd-bus");
+                    $("#"+lastid).find("img").attr("src","vendor/images/bus2.png");
+
+                    $("#"+divid).find("h2").after("<span class=\"cd-date\">即将到站...</span>");
                 }else {
-                    //即将到站
-                    if(station.status == "0.5"){
-                        var lastsid = station.id-1;
-                        var lastid = "station_"+lastsid+"_5";
-
-                        div = "<div id=\""+lastid+divf;
-                        $("#cd-timeline").append(div);
-
-                        $("#"+lastid).addClass("cd-bus");
-                        $("#"+lastid).find("img").attr("src","vendor/images/bus2.png");
-
-                        $("#"+lastid).find("h2").html("即将到站...");
-                    }
-
                     //未到站 站点
-                    div = "<div id=\""+divid+divf;
-                    $("#cd-timeline").append(div);
-
-                    $("#"+divid).find("h2").html(station.name);
                     if(sid > 0 && sid === station.id){
                         $("#station_"+sid).addClass("cd-mylocation");
                     }
