@@ -21,14 +21,14 @@ function gotoline(){
 
     //方向
     var dirid = $("#rtbus_direction").val();
-    if(dirid == ""){
+    if(dirid === ""){
         $("#rtbus_direction").focus();
         return
     }
 
     //公交站
     var sid = $("#rtbus_station").val();
-    if(sid == ""){
+    if(sid === ""){
         $("#rtbus_station").focus();
         return
     }
