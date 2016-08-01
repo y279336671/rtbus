@@ -41,7 +41,7 @@ type BusDirInfo struct {
 
 type BusStation struct {
 	ID     string `json:"id"`
-	Name   string `json:"name"`
+	Name   string `json:"name,omitempty"`
 	Status string `json:"status"`
 }
 

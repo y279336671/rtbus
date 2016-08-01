@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
+	"github.com/xuebing1110/rtbus/api"
 )
 
 func LineInfoHandler(params martini.Params, r render.Render) {
@@ -28,14 +29,32 @@ func LineInfoHandler(params martini.Params, r render.Render) {
 		return
 	}
 
-	r.JSON(200,
-		&Response{
-			0,
-			"OK",
-			stations,
-		},
-	)
-
+	//不要站牌名称
+	s, found := params["simple"]
+	if found && s != "0" && s != "false" {
+		stations_tmp := make([]*api.BusStation, len(stations))
+		for i, station := range stations {
+			stations_tmp[i] = &api.BusStation{
+				ID:     station.ID,
+				Status: station.Status,
+			}
+		}
+		r.JSON(200,
+			&Response{
+				0,
+				"OK",
+				stations_tmp,
+			},
+		)
+	} else {
+		r.JSON(200,
+			&Response{
+				0,
+				"OK",
+				stations,
+			},
+		)
+	}
 }
 
 func LineNumHandler(params martini.Params, r render.Render) {
