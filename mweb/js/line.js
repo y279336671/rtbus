@@ -12,11 +12,18 @@ function renderLineInfo(){
         return
     }
 
+    var requrl;
+    if(times === 1){
+        requrl = "http://api.bingbaba.com/rtbus/bj/info/"+linenum+"/"+dirid;
+    }else {
+        requrl = "http://api.bingbaba.com/rtbus/bj/info/"+linenum+"/"+dirid+"?simple=1";
+    }
+
     //渲染
     $('#loadingToast').show();
     $.ajax({
         type:"GET",
-        url:"http://api.bingbaba.com/rtbus/bj/info/"+linenum+"/"+dirid,
+        url: requrl,
         // url:"http://127.0.0.1:1315/rtbus/bj/info/"+linenum+"/"+dirid,
         contentType:"application/x-www-form-urlencoded; charset=utf-8",
         success:function(data){

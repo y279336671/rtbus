@@ -4,9 +4,10 @@ import (
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 	"github.com/xuebing1110/rtbus/api"
+	"net/http"
 )
 
-func LineInfoHandler(params martini.Params, r render.Render) {
+func LineInfoHandler(params martini.Params, r render.Render, req *http.Request) {
 	if BusSess == nil {
 		r.JSON(
 			502,
@@ -17,7 +18,6 @@ func LineInfoHandler(params martini.Params, r render.Render) {
 
 	// linenum, _ := url.QueryUnescape(params["linenum"])
 	// fmt.Println(params["linenum"])
-
 	stations, err := BusSess.GetLineInfo(params["linenum"], params["direction"])
 	if err != nil {
 		logger.Error("%v", err)
@@ -30,8 +30,9 @@ func LineInfoHandler(params martini.Params, r render.Render) {
 	}
 
 	//不要站牌名称
-	s, found := params["simple"]
-	if found && s != "0" && s != "false" {
+	req.ParseForm()
+	s := req.Form.Get("simple")
+	if s != "0" && s != "false" {
 		stations_tmp := make([]*api.BusStation, len(stations))
 		for i, station := range stations {
 			stations_tmp[i] = &api.BusStation{
