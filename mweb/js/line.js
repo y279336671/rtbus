@@ -65,24 +65,24 @@ function updateTimelineContainer(businfo,sid){
         $("#"+divid).find("span").remove();
         $("#"+divid).find("img").attr("src","vendor/images/cd-icon-location.svg");
 
-        //到站
-        if(station.status == "1") {
+        //未到站 站点
+        if(station.status <= 0){
+            if(sid > 0 && sid === station.id){
+                $("#station_"+sid).addClass("cd-mylocation");
+            }
+        }else { //到站 OR 即将到站
             if(sid > 0 && sid === station.id){
                 $("#"+divid).addClass("cd-mylocation");
             }else {
                 $("#"+divid).addClass("cd-bus");
                 $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
             }
-            $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
-        }else if(station.status == "0.5"){ //即将到站
-            $("#"+divid).addClass("cd-bus");
-            $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
 
-            $("#"+divid).find("h2").after("<span class=\"cd-date\">即将到站...</span>");
-        }else {
-            //未到站 站点
-            if(sid > 0 && sid === station.id){
-                $("#station_"+sid).addClass("cd-mylocation");
+            //到站
+            if(station.status == "1") {
+                $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
+            }else if(station.status == "0.5"){ //即将到站
+                $("#"+divid).find("h2").after("<span class=\"cd-date\">即将到站...</span>");
             }
         }
     }
@@ -110,24 +110,24 @@ function initTimelineContainer(businfo,sid){
         $("#cd-timeline").append(div);
         $("#"+divid).find("h2").html(station.name);
 
-        //到站
-        if(station.status == "1") {
+        //未到站 站点
+        if(station.status <= 0){
+            if(sid > 0 && sid === station.id){
+                $("#station_"+sid).addClass("cd-mylocation");
+            }
+        }else { //到站 OR 即将到站
             if(sid > 0 && sid === station.id){
                 $("#"+divid).addClass("cd-mylocation");
             }else {
                 $("#"+divid).addClass("cd-bus");
                 $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
             }
-            $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
-        }else if(station.status == "0.5"){ //即将到站
-            $("#"+divid).addClass("cd-bus");
-            $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
 
-            $("#"+divid).find("h2").after("<span class=\"cd-date\">即将到站...</span>");
-        }else {
-            //未到站 站点
-            if(sid > 0 && sid === station.id){
-                $("#station_"+sid).addClass("cd-mylocation");
+            //到站
+            if(station.status == "1") {
+                $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
+            }else if(station.status == "0.5"){ //即将到站
+                $("#"+divid).find("h2").after("<span class=\"cd-date\">即将到站...</span>");
             }
         }
 

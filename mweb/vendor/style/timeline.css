@@ -107,13 +107,13 @@ Main components
   font-weight: 400;
 }
 
+.cd-mylocation .cd-timeline-content span {
+  color: #c03b44;
+}
+
 .cd-timeline-content span {
   color: rgb(21,119,195);
   font-weight: 900;
-}
-
-.cd-mylocation .cd-timeline-content span {
-  color: #c03b44;
 }
 
 .cd-bus .cd-timeline-content h2 {
