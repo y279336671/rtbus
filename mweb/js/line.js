@@ -51,8 +51,8 @@ function renderLineInfo(){
                         $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
                     }
                 }else if(station.status == "0.5"){ //即将到站
-                    $("#"+lastid).addClass("cd-bus");
-                    $("#"+lastid).find("img").attr("src","vendor/images/bus2.png");
+                    $("#"+divid).addClass("cd-bus");
+                    $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
 
                     $("#"+divid).find("h2").after("<span class=\"cd-date\">即将到站...</span>");
                 }else {
