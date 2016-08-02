@@ -15,6 +15,12 @@ type BusDirInfo struct {
 	Name2Index map[string]int `json:"-"`
 	ID         string         `json:"id"`
 	Name       string         `json:"name"`
+	StartSn    string         `json:"startsn,omitempty"`
+	EndSn      string         `json:"endsn,omitempty"`
+	Price      string         `json:"price,omitempty"`
+	SnNum      int            `json:"stationsNum,omitempty"`
+	FirstTime  string         `json:"firstTime,omitempty"`
+	LastTime   string         `json:"lastTime,omitempty"`
 	Stations   []*BusStation  `json:"stations"`
 }
 
