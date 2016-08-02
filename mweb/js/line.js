@@ -1,6 +1,5 @@
 var times = 0;
-// var domain = "http://api.bingbaba.com";
-var domain = "http://127.0.0.1:1315";
+var domain = "http://api.bingbaba.com";
 
 function renderLineInfo(){
     var linenum = $.getUrlParam('linenum');
