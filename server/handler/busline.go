@@ -3,11 +3,9 @@ package handler
 import (
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
-	"github.com/xuebing1110/rtbus/api"
-	"net/http"
 )
 
-func LineInfoHandler(params martini.Params, r render.Render, req *http.Request) {
+func LineStationHandler(params martini.Params, r render.Render) {
 	if BusSess == nil {
 		r.JSON(
 			502,
@@ -16,36 +14,12 @@ func LineInfoHandler(params martini.Params, r render.Render, req *http.Request) 
 		return
 	}
 
-	// linenum, _ := url.QueryUnescape(params["linenum"])
-	// fmt.Println(params["linenum"])
-	stations, err := BusSess.GetLineInfo(params["linenum"], params["direction"])
+	stations, err := BusSess.GetLineStationInfo(params["linenum"], params["direction"])
 	if err != nil {
 		logger.Error("%v", err)
-
 		r.JSON(
 			502,
 			&Response{503, err.Error(), nil},
-		)
-		return
-	}
-
-	//不要站牌名称
-	req.ParseForm()
-	s := req.Form.Get("simple")
-	if s != "" && s != "0" && s != "false" {
-		stations_tmp := make([]*api.BusStation, len(stations))
-		for i, station := range stations {
-			stations_tmp[i] = &api.BusStation{
-				ID:     station.ID,
-				Status: station.Status,
-			}
-		}
-		r.JSON(200,
-			&Response{
-				0,
-				"OK",
-				stations_tmp,
-			},
 		)
 	} else {
 		r.JSON(200,
@@ -56,6 +30,37 @@ func LineInfoHandler(params martini.Params, r render.Render, req *http.Request) 
 			},
 		)
 	}
+
+	return
+}
+
+func LineBusHandler(params martini.Params, r render.Render) {
+	if BusSess == nil {
+		r.JSON(
+			502,
+			&Response{502, "bjbus sess token error", nil},
+		)
+		return
+	}
+
+	buses, err := BusSess.GetLineBusInfo(params["linenum"], params["direction"])
+	if err != nil {
+		logger.Error("%v", err)
+		r.JSON(
+			502,
+			&Response{503, err.Error(), nil},
+		)
+	} else {
+		r.JSON(200,
+			&Response{
+				0,
+				"OK",
+				buses,
+			},
+		)
+	}
+
+	return
 }
 
 func LineNumHandler(params martini.Params, r render.Render) {

@@ -33,16 +33,25 @@ type BusLine struct {
 type BusDirInfo struct {
 	l          sync.Mutex
 	freshTime  int64
+	Name2Index map[string]int `json:"-"`
 	ID         string         `json:"id"`
 	Name       string         `json:"name"`
 	Stations   []*BusStation  `json:"stations"`
-	Name2Index map[string]int `json:"-"`
 }
 
 type BusStation struct {
-	ID     string `json:"id"`
-	Name   string `json:"name,omitempty"`
-	Status string `json:"status"`
+	ID    int          `json:"id"`
+	Name  string       `json:"name,omitempty"`
+	Buses []*RunnigBus `json:"buses,omitempty"`
+}
+
+type RunnigBus struct {
+	StationID int     `json:"sid"`
+	Status    string  `json:"status"`
+	BusID     string  `json:"busid,omitempty"`
+	Lat       float64 `json:"lat,omitempty"`
+	Lng       float64 `json:"lng,omitempty"`
+	Distance  int     `json:"distance,omitempty"`
 }
 
 type StationStatusResp struct {
@@ -169,26 +178,46 @@ func (b *BJBusSess) freshStatus(linenum string, busdir *BusDirInfo) error {
 		return err2
 	}
 
-	map_cur := make(map[int]string)
+	map_cur := make(map[int][]*RunnigBus)
 	for _, station_status := range station_status_array {
 		station_index, err := strconv.Atoi(station_status[0])
 		if err == nil {
-			if station_status[2] == "buss" {
-				map_cur[station_index-1] = "1" //到站
-			} else if station_status[2] == "busc" {
-				map_cur[station_index-1] = "0.5" //即将到站
-			}
+			if station_status[2] == "buss" { //到站
+				buses_tmp, found := map_cur[station_index]
+				if !found {
+					buses_tmp = make([]*RunnigBus, 0)
+				}
 
+				buses_tmp = append(buses_tmp,
+					&RunnigBus{
+						StationID: station_index,
+						Status:    "1",
+					})
+				map_cur[station_index] = buses_tmp
+			} else if station_status[2] == "busc" { //即将到站
+				buses_tmp, found := map_cur[station_index]
+				if !found {
+					buses_tmp = make([]*RunnigBus, 0)
+				}
+
+				buses_tmp = append(buses_tmp,
+					&RunnigBus{
+						StationID: station_index,
+						Status:    "0.5",
+					})
+				map_cur[station_index] = buses_tmp
+			}
 		}
 	}
 
+	//更新存储
 	for i := 0; i < len(busdir.Stations); i++ {
-		status, found := map_cur[i]
-		if found {
-			busdir.Stations[i].Status = status
-		} else {
-			busdir.Stations[i].Status = ""
+		sid := busdir.Stations[i].ID
+		buses_tmp, found := map_cur[sid]
+		if !found {
+			buses_tmp = make([]*RunnigBus, 0)
 		}
+		busdir.Stations[i].Buses = buses_tmp
 	}
 
 	busdir.freshTime = time.Now().Unix()
@@ -256,8 +285,9 @@ func (b *BJBusSess) loadBusStation(linenum, dirid string) error {
 		}
 
 		for _, station := range station_array {
+			sid, _ := strconv.Atoi(station[0])
 			busstation := &BusStation{
-				ID:   station[0],
+				ID:   sid,
 				Name: station[1],
 			}
 
@@ -288,19 +318,27 @@ func (b *BJBusSess) newHttpRequest(req_url string) (*http.Request, error) {
 	return httpreq, nil
 }
 
-func (b *BJBusSess) GetLineInfo(linenum, direction string) ([]*BusStation, error) {
-	err := b.FreshStatus(linenum, direction)
-	if err != nil {
-		return nil, err
+func (b *BJBusSess) GetLineBusInfo(linenum, direction string) ([]*RunnigBus, error) {
+	busdir, err2 := b.getBusDir(linenum, direction)
+	if err2 != nil {
+		return nil, err2
 	}
 
+	rbuses := make([]*RunnigBus, 0)
+	for _, s := range busdir.Stations {
+		rbuses = append(rbuses, s.Buses...)
+	}
+
+	return rbuses, nil
+}
+
+func (b *BJBusSess) GetLineStationInfo(linenum, direction string) ([]*BusStation, error) {
 	busdir, err2 := b.getBusDir(linenum, direction)
 	if err2 != nil {
 		return nil, err2
 	}
 
 	return busdir.Stations, nil
-
 }
 
 func (b *BJBusSess) getBusDir(linenum, direction string) (*BusDirInfo, error) {
@@ -344,8 +382,10 @@ func (b *BJBusSess) Print() {
 			)
 
 			for _, station := range busdir.Stations {
-				if station.Status != "" {
-					logger.Info("%s:%s %s\n", station.ID, station.Name, station.Status)
+				if station.Buses != nil && len(station.Buses) > 0 {
+					for _, bus := range station.Buses {
+						logger.Info("%d:%s %s\n", station.ID, station.Name, bus.Status)
+					}
 				}
 			}
 		}

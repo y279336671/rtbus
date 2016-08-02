@@ -1,4 +1,7 @@
 var times = 0;
+// var domain = "http://api.bingbaba.com";
+var domain = "http://127.0.0.1:1315";
+
 function renderLineInfo(){
     var linenum = $.getUrlParam('linenum');
     var uid = $.getUrlParam('uid');
@@ -14,9 +17,9 @@ function renderLineInfo(){
 
     var requrl;
     if(times === 1){
-        requrl = "http://api.bingbaba.com/rtbus/bj/info/"+linenum+"/"+dirid;
+        requrl = domain+"/rtbus/bj/station/"+linenum+"/"+dirid;
     }else {
-        requrl = "http://api.bingbaba.com/rtbus/bj/info/"+linenum+"/"+dirid+"?simple=1";
+        requrl = domain+"/rtbus/bj/bus/"+linenum+"/"+dirid;
     }
 
     //渲染
@@ -111,11 +114,25 @@ function initTimelineContainer(businfo,sid){
         $("#"+divid).find("h2").html(station.name);
 
         //未到站 站点
-        if(station.status <= 0){
+        if(station.buses.length <= 0){
             if(sid > 0 && sid === station.id){
                 $("#station_"+sid).addClass("cd-mylocation");
             }
         }else { //到站 OR 即将到站
+            var nearstation;
+            var arrival,warrival = new Boolean(false);
+            for (var i = 0; i < station.buses.length; i++) {
+                var bus = station.buses[i];
+
+                //到站
+                if(bus.status == "1") {
+                    arrival = true;
+                }else if(bus.status == "0.5"){ //即将到站
+                    warrival = true;
+                }
+            }
+
+
             if(sid > 0 && sid === station.id){
                 $("#"+divid).addClass("cd-mylocation");
             }else {
@@ -123,10 +140,12 @@ function initTimelineContainer(businfo,sid){
                 $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
             }
 
+            
+
             //到站
-            if(station.status == "1") {
+            if(arrival) {
                 $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
-            }else if(station.status == "0.5"){ //即将到站
+            }else if(warrival){ //即将到站
                 $("#"+divid).find("h2").after("<span class=\"cd-date\">即将到站...</span>");
             }
         }
