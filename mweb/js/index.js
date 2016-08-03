@@ -23,18 +23,23 @@ $(function () {
 
     //line
     var line = {
-        url:'/line',
+        url:'/line/:cityid/:lineid/:dirid/:sid',
         className:'line',
         render: function () {
             $('#container').load('html/line.html');
-            // $('#container').append("<section id=\"cd-timeline\" class=\"cd-container\"></section>");
-        },
-        bind: function () {
+
+            var cityid = this.params.cityid;
+            var lineid = this.params.lineid;
+            var dirid = this.params.dirid;
+            var sid = this.params.sid;
+
+            //渲染
             $.getScript("js/line.js",function(){
-                renderLineInfo();
+                renderLineInfoByParams(cityid,lineid,dirid,sid);
             });
 
-        }
+        },
+        bind: function () {}
     }
 
     router.push(home)

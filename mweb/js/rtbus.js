@@ -35,9 +35,7 @@ function gotoline(){
         return
     }
 
-
-    var url_params = "linenum="+linenum+"&dirid="+dirid+"&sid="+sid+"&city="+city;
-    location.href = "index.html?"+url_params+"#/line";
+    location.href = "#/line/"+city+"/"+linenum+"/"+dirid+"/"+sid;
 }
 
 //全局变量
@@ -76,7 +74,9 @@ function getbusline(){
 }
 
 function showstation(){
-    direction = $("#rtbus_direction").val()
+    direction = $("#rtbus_direction").val();
+    citycode =  $("#rtbus_city").val();
+    cityname = $("#rtbus_city option").eq($("#rtbus_city").attr("selectedIndex")).text()
 
     $('#loadingToast').show();
     for (var i=0;i<businfo.direction.length;i++) {
@@ -84,6 +84,11 @@ function showstation(){
 
         if(busdir.id == direction){
             $("#rtbus_station").empty();
+
+            //修改标题
+            var title = cityname+busline+"路("+busdir.name+")实时公交";
+            $(document).find("title").text(title);
+            console.log($(document).find("title"));
 
             for (var i=0;i<busdir.stations.length;i++) {
                 var station = busdir.stations[i];

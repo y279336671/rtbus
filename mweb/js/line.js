@@ -1,25 +1,37 @@
-var times = 0;
-var domain = "http://api.bingbaba.com";
+var cache = {
+    domain:"http://api.bingbaba.com",
+    times:0,
+    params:{}
+};
+
+function renderLineInfoByParams(city,lineid,dirid,sid){
+    cache.params.cityid = city;
+    cache.params.lineid = lineid;
+    cache.params.dirid = dirid;
+    cache.params.sid = sid;
+
+    renderLineInfo();
+}
 
 function renderLineInfo(){
-    var linenum = $.getUrlParam('linenum');
-    var uid = $.getUrlParam('uid');
-    var dirid = $.getUrlParam('dirid');
-    var sid = $.getUrlParam('sid');
-    var city = $.getUrlParam('city');
-    times++;
-    // console.log(linenum);
+    cache.times++;
+    // console.log(lineid);
+
+    var city = cache.params.cityid;
+    var lineid = cache.params.lineid;
+    var dirid = cache.params.dirid;
+    var sid = cache.params.sid;
 
     //参数错误
-    if(linenum == "" || dirid == ""){
+    if(lineid == "" || dirid == ""){
         return
     }
 
     var requrl;
-    if(times === 1){
-        requrl = domain+"/rtbus/"+city+"/station/"+linenum+"/"+dirid;
+    if(cache.times === 1){
+        requrl = cache.domain+"/rtbus/"+city+"/station/"+lineid+"/"+dirid;
     }else {
-        requrl = domain+"/rtbus/"+city+"/bus/"+linenum+"/"+dirid;
+        requrl = cache.domain+"/rtbus/"+city+"/bus/"+lineid+"/"+dirid;
     }
 
     //渲染
@@ -27,10 +39,10 @@ function renderLineInfo(){
     $.ajax({
         type:"GET",
         url: requrl,
-        // url:"http://127.0.0.1:1315/rtbus/bj/info/"+linenum+"/"+dirid,
+        // url:"http://127.0.0.1:1315/rtbus/bj/info/"+lineid+"/"+dirid,
         contentType:"application/x-www-form-urlencoded; charset=utf-8",
         success:function(data){
-            if(times === 1){
+            if(cache.times === 1){
                 initTimelineContainer(data.data,sid);
             }else {
                 updateTimelineContainer(data.data,sid);
