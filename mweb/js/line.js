@@ -103,6 +103,8 @@ function updateTimelineContainer(businfo,sid){
 }
 
 function refreshStationDiv(divid,station,sid) {
+    console.log(station);
+
     //未到站
     if(!station.buses){
         if(sid > 0 && sid == station.order){
@@ -111,6 +113,7 @@ function refreshStationDiv(divid,station,sid) {
     }else { //到站 OR 即将到站
         var nearstation;
         var arrival,warrival = false;
+
         for (var i = 0; i < station.buses.length; i++) {
             var bus = station.buses[i];
 
@@ -119,6 +122,11 @@ function refreshStationDiv(divid,station,sid) {
                 arrival = true;
             }else if(bus.status == "0.5"){ //即将到站
                 warrival = true;
+            }
+
+            //最近公交
+            if(!nearstation || bus.distanceToSc < nearstation.distanceToSc){
+                nearstation = bus
             }
         }
 
@@ -134,7 +142,13 @@ function refreshStationDiv(divid,station,sid) {
         if(arrival) {
             $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
         }else if(warrival){ //即将到站
-            $("#"+divid).find("h2").after("<span class=\"cd-date\">即将到站...</span>");
+            var text = "即将到站";
+            if(nearstation.distanceToSc && nearstation.distanceToSc > 0){
+                text = text+",还有"+nearstation.distanceToSc+"米";
+            }else {
+                text = text+"...";
+            }
+            $("#"+divid).find("h2").after("<span class=\"cd-date\">"+text+"</span>");
         }
     }
 }

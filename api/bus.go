@@ -60,8 +60,8 @@ func (b *BusLine) GetBusInfo(dirid string) (*BusDirInfo, error) {
 	return nil, errors.New("can't found the direction:" + dirid)
 }
 
-func (b *BusLine) GetRunningBus(dirid string) ([]*RunningBus, error) {
-	rbuses := make([]*RunningBus, 0)
+func (b *BusLine) GetRunningBus(dirid string) ([]*BusStation, error) {
+	rbuses := make([]*BusStation, 0)
 
 	busdir, err := b.GetBusInfo(dirid)
 	if err != nil {
@@ -69,7 +69,9 @@ func (b *BusLine) GetRunningBus(dirid string) ([]*RunningBus, error) {
 	}
 
 	for _, station := range busdir.Stations {
-		rbuses = append(rbuses, station.Buses...)
+		if len(station.Buses) > 0 {
+			rbuses = append(rbuses, station)
+		}
 	}
 
 	return rbuses, nil

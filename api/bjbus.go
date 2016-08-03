@@ -289,15 +289,15 @@ func (b *BJBusSess) newHttpRequest(req_url string) (*http.Request, error) {
 	return httpreq, nil
 }
 
-func (b *BJBusSess) GetLineBusInfo(linenum, direction string) ([]*RunningBus, error) {
+func (b *BJBusSess) GetLineBusInfo(linenum, direction string) ([]*BusStation, error) {
 	busdir, err2 := b.getBusDir(linenum, direction)
 	if err2 != nil {
 		return nil, err2
 	}
 
-	rbuses := make([]*RunningBus, 0)
+	rbuses := make([]*BusStation, 0)
 	for _, s := range busdir.Stations {
-		rbuses = append(rbuses, s.Buses...)
+		rbuses = append(rbuses, s)
 	}
 
 	return rbuses, nil
