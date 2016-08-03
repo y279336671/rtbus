@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bingbaba/util/httptool"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -21,6 +22,7 @@ type CityInfo struct {
 }
 
 type CllBus struct {
+	l        sync.Mutex
 	BusLines map[string]*BusLine
 	CityInfo *CityInfo
 }
@@ -47,9 +49,17 @@ func NewCllBus(citytel string) (*CllBus, error) {
 }
 
 func (b *CllBus) GetBusLine(lineid string) (*BusLine, error) {
+	b.l.Lock()
+	defer b.l.Unlock()
+
 	_, found := b.BusLines[lineid]
 	if !found {
 		err := b.initBusline(lineid)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := b.freshBusline(lineid)
 		if err != nil {
 			return nil, err
 		}
@@ -103,22 +113,34 @@ func (b *CllBus) freshBuslineDir(lineid, dirid string) error {
 		bl.Direction = append(bl.Direction, busdir)
 	}
 
-	//更新bus信息
-	for _, s := range busdir.Stations {
-		s.Buses = make([]*RunningBus, 0)
-		for _, rbus := range cllresp.Data.Bus {
-			if s.Order == rbus.Order {
-				if rbus.Distance == 0 {
-					rbus.Status = "1"
-				} else {
-					rbus.Status = "0.5"
+	busdir.l.Lock()
+	defer busdir.l.Unlock()
+
+	curtime := time.Now().Unix()
+	if curtime-busdir.freshTime < 10 {
+		return nil
+	} else {
+		//更新bus信息
+		for _, s := range busdir.Stations {
+			s.Buses = make([]*RunningBus, 0)
+			for _, rbus := range cllresp.Data.Bus {
+				if s.Order == rbus.Order {
+					//具体时间
+					rbus.SyncTime = curtime - rbus.SyncTime
+
+					//status
+					if rbus.Distance == 0 {
+						rbus.Status = "1"
+					} else {
+						rbus.Status = "0.5"
+					}
+					s.Buses = append(s.Buses, rbus)
 				}
-				s.Buses = append(s.Buses, rbus)
 			}
 		}
 	}
 
-	busdir.freshTime = time.Now().Unix()
+	busdir.freshTime = curtime
 
 	return nil
 }

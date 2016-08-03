@@ -40,7 +40,7 @@ type RunningBus struct {
 	Lat      float64 `json:"lat,omitempty"`
 	Lng      float64 `json:"lng,omitempty"`
 	Distance int     `json:"distanceToSc,omitempty"`
-	SyncTime int     `json:"syncTime,omitempty"`
+	SyncTime int64   `json:"syncTime,omitempty"`
 }
 
 func NewBusLine(lineid string) *BusLine {
