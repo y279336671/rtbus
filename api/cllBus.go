@@ -118,6 +118,15 @@ func (b *CllBus) freshBuslineDir(lineid, dirid string) error {
 
 	curtime := time.Now().Unix()
 	if curtime-busdir.freshTime < 10 {
+		//更新同步时间
+		if curtime-busdir.freshTime > 5 {
+			for _, s := range busdir.Stations {
+				for _, rbus := range s.Buses {
+					rbus.SyncTime = rbus.SyncTime + (curtime - busdir.freshTime)
+				}
+			}
+		}
+
 		return nil
 	} else {
 		//更新bus信息
@@ -125,9 +134,6 @@ func (b *CllBus) freshBuslineDir(lineid, dirid string) error {
 			s.Buses = make([]*RunningBus, 0)
 			for _, rbus := range cllresp.Data.Bus {
 				if s.Order == rbus.Order {
-					//具体时间
-					rbus.SyncTime = curtime - rbus.SyncTime
-
 					//status
 					if rbus.Distance == 0 {
 						rbus.Status = "1"

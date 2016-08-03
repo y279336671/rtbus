@@ -103,13 +103,11 @@ function updateTimelineContainer(businfo,sid){
         var divid = "station_"+station.order;
         
         //刷新div样式
-        refreshStationDiv(divid,station,sid)
+        refreshStationDiv(divid,station,sid);
     }
 }
 
 function refreshStationDiv(divid,station,sid) {
-    // console.log(station);
-
     //未到站
     if(!station.buses){
         if(sid > 0 && sid == station.order){
@@ -142,14 +140,14 @@ function refreshStationDiv(divid,station,sid) {
             $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
         }
 
-
         //到站
         if(arrival) {
             $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
         }else if(warrival){ //即将到站
             var text = "即将到站";
             if(nearstation.distanceToSc && nearstation.distanceToSc > 0){
-                text = text+",还有"+nearstation.distanceToSc+"米";
+                var intreval = nearstation.syncTime;
+                text = text+",还有"+nearstation.distanceToSc+"米("+intreval+"秒前刷新)";
             }else {
                 text = text+"...";
             }
