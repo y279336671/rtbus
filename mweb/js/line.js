@@ -6,6 +6,7 @@ function renderLineInfo(){
     var uid = $.getUrlParam('uid');
     var dirid = $.getUrlParam('dirid');
     var sid = $.getUrlParam('sid');
+    var city = $.getUrlParam('city');
     times++;
     // console.log(linenum);
 
@@ -16,9 +17,9 @@ function renderLineInfo(){
 
     var requrl;
     if(times === 1){
-        requrl = domain+"/rtbus/bj/station/"+linenum+"/"+dirid;
+        requrl = domain+"/rtbus/"+city+"/station/"+linenum+"/"+dirid;
     }else {
-        requrl = domain+"/rtbus/bj/bus/"+linenum+"/"+dirid;
+        requrl = domain+"/rtbus/"+city+"/bus/"+linenum+"/"+dirid;
     }
 
     //渲染

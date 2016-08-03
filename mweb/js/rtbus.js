@@ -8,10 +8,12 @@ function putbusline(){
             $('#toast').hide();
         }, 1500);
     }, 1000);
-    console.log($("#rtbus_direction").val());
 }
 
 function gotoline(){
+    //城市
+    var city = $("#rtbus_city").val();
+
     //公交线
     var linenum = $("#busline").val();
     if(linenum === ""){
@@ -32,7 +34,10 @@ function gotoline(){
         $("#rtbus_station").focus();
         return
     }
-    location.href = "index.html?linenum="+linenum+"&dirid="+dirid+"&sid="+sid+"#/line";
+
+
+    var url_params = "linenum="+linenum+"&dirid="+dirid+"&sid="+sid+"&city="+city;
+    location.href = "index.html?"+url_params+"#/line";
 }
 
 //全局变量
@@ -41,11 +46,12 @@ var busline,businfo,busdir;
 function getbusline(){
     if (busline != $("#busline").val() && $("#busline").val() != "") {
         busline = $("#busline").val();
+        var city = $("#rtbus_city").val();
 
         $('#loadingToast').show();
         $.ajax({
             type:"GET",
-            url:"http://api.bingbaba.com/rtbus/bj/direction/"+busline,
+            url:"http://api.bingbaba.com/rtbus/"+city+"/direction/"+busline,
             success:function(data){
                 businfo = data.data;
                 $("#rtbus_direction").empty();
@@ -59,7 +65,6 @@ function getbusline(){
                         option = "<option value='"+busdir.id+"'>"+busdir.name+"</option>"
                     }
 
-                    console.log(busdir)
                     $("#rtbus_direction").append(option);
                 }
 
@@ -72,7 +77,6 @@ function getbusline(){
 
 function showstation(){
     direction = $("#rtbus_direction").val()
-    console.log(direction)
 
     $('#loadingToast').show();
     for (var i=0;i<businfo.direction.length;i++) {

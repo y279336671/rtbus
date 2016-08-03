@@ -108,8 +108,11 @@ func (b *CllBus) freshBuslineDir(lineid, dirid string) error {
 		s.Buses = make([]*RunningBus, 0)
 		for _, rbus := range cllresp.Data.Bus {
 			if s.Order == rbus.Order {
-				fmt.Println(rbus)
-
+				if rbus.Distance == 0 {
+					rbus.Status = "1"
+				} else {
+					rbus.Status = "0.5"
+				}
 				s.Buses = append(s.Buses, rbus)
 			}
 		}

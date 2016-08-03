@@ -78,7 +78,7 @@ func CllBusSnHandler(params martini.Params, r render.Render) {
 		&Response{
 			0,
 			"OK",
-			businfo,
+			businfo.Stations,
 		},
 	)
 }
