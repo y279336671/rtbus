@@ -43,9 +43,9 @@ function renderLineInfo(){
         contentType:"application/x-www-form-urlencoded; charset=utf-8",
         success:function(data){
             if(cache.times === 1){
-                initTimelineContainer(data.data,sid);
+                initTimelineContainer(data.data);
             }else {
-                updateTimelineContainer(data.data,sid);
+                updateTimelineContainer(data.data);
             }
 
             //锚点跳到响应位置
@@ -69,7 +69,12 @@ function renderLineInfo(){
     })
 }
 
-function initTimelineContainer(businfo,sid){
+function initTimelineContainer(businfo){
+    //修改标题
+    var dirname = businfo[0].sn+"-"+businfo[businfo.length-1].sn;
+    var title = cache.params.lineid+"路("+dirname+")实时公交";
+    $(document).find("title").text(title);
+
     $("#cd-timeline").empty();
     for (var i=0;i<businfo.length;i++) {
         station = businfo[i];
@@ -92,18 +97,18 @@ function initTimelineContainer(businfo,sid){
         $("#"+divid).find("h2").html(station.sn);
 
         //刷新div样式
-        refreshStationDiv(divid,station,sid)
+        refreshStationDiv(divid,station)
         // console.log($("#"+divid));
         // console.log($("#cd-timeline"));
     }
 }
 
-function updateTimelineContainer(businfo,sid){
+function updateTimelineContainer(businfo){
     //初始化
     var children = $("#cd-timeline").children("div");
     for (var i = 0; i < children.length; i++) {
         var child = children[i];
-        $(child).removeClass("cd-mylocation");
+        // $(child).removeClass("cd-mylocation");
         $(child).removeClass("cd-bus");
         $(child).find("span").remove();
         $(child).find("img").attr("src","vendor/images/cd-icon-location.svg");
@@ -115,11 +120,13 @@ function updateTimelineContainer(businfo,sid){
         var divid = "station_"+station.order;
         
         //刷新div样式
-        refreshStationDiv(divid,station,sid);
+        refreshStationDiv(divid,station);
     }
 }
 
-function refreshStationDiv(divid,station,sid) {
+function refreshStationDiv(divid,station) {
+    var sid = cache.params.sid;
+
     //未到站
     if(!station.buses){
         if(sid > 0 && sid == station.order){

@@ -85,11 +85,6 @@ function showstation(){
         if(busdir.id == direction){
             $("#rtbus_station").empty();
 
-            //修改标题
-            var title = cityname+busline+"路("+busdir.name+")实时公交";
-            $(document).find("title").text(title);
-            console.log($(document).find("title"));
-
             for (var i=0;i<busdir.stations.length;i++) {
                 var station = busdir.stations[i];
                 $("#rtbus_station").append("<option value='"+station.order+"'>"+station.sn+"</option>")
