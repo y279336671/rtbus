@@ -56,30 +56,12 @@ function renderLineInfo(){
     })
 }
 
-function updateTimelineContainer(businfo,sid){
-    for (var i=0;i<businfo.length;i++) {
-        station = businfo[i];
-
-        console.log(station);
-
-        //初始化
-        var divid = "station_"+station.id;
-        $("#"+divid).removeClass("cd-mylocation");
-        $("#"+divid).removeClass("cd-bus");
-        $("#"+divid).find("span").remove();
-        $("#"+divid).find("img").attr("src","vendor/images/cd-icon-location.svg");
-
-        //刷新div样式
-        refreshStationDiv(divid,station,sid)
-    }
-}
-
 function initTimelineContainer(businfo,sid){
     $("#cd-timeline").empty();
     for (var i=0;i<businfo.length;i++) {
         station = businfo[i];
 
-        var divid = "station_"+station.id;
+        var divid = "station_"+station.order;
         var divh = "<div id=\""+divid;
         var divf= "\" class=\"cd-timeline-block\">\
             <div class=\"cd-timeline-img\">\
@@ -94,7 +76,7 @@ function initTimelineContainer(businfo,sid){
         //新增div
         var div = divh+divf;
         $("#cd-timeline").append(div);
-        $("#"+divid).find("h2").html(station.name);
+        $("#"+divid).find("h2").html(station.sn);
 
         //刷新div样式
         refreshStationDiv(divid,station,sid)
@@ -103,10 +85,28 @@ function initTimelineContainer(businfo,sid){
     }
 }
 
+function updateTimelineContainer(businfo,sid){
+    for (var i=0;i<businfo.length;i++) {
+        station = businfo[i];
+
+        console.log(station);
+
+        //初始化
+        var divid = "station_"+station.order;
+        $("#"+divid).removeClass("cd-mylocation");
+        $("#"+divid).removeClass("cd-bus");
+        $("#"+divid).find("span").remove();
+        $("#"+divid).find("img").attr("src","vendor/images/cd-icon-location.svg");
+
+        //刷新div样式
+        refreshStationDiv(divid,station,sid)
+    }
+}
+
 function refreshStationDiv(divid,station,sid) {
     //未到站
     if(!station.buses){
-        if(sid > 0 && sid == station.id){
+        if(sid > 0 && sid == station.order){
             $("#station_"+sid).addClass("cd-mylocation");
         }
     }else { //到站 OR 即将到站
@@ -123,8 +123,8 @@ function refreshStationDiv(divid,station,sid) {
             }
         }
 
-        console.log(sid +"<=>"+station.id);
-        if(sid > 0 && sid == station.id){
+        console.log(sid +"<=>"+station.order);
+        if(sid > 0 && sid == station.order){
             console.log("true...")
             $("#"+divid).addClass("cd-mylocation");
         }else {

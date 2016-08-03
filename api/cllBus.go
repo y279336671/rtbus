@@ -3,8 +3,8 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/bingbaba/util/httptool"
 	"net/http"
-	//"github.com/bingbaba/util/httptool"
 )
 
 const (
@@ -49,6 +49,14 @@ type CllLineResp struct {
 	LastTime  string `json:"lastTime,omitempty"`
 }
 
+type CllLineDirBaseInfo struct {
+	Data struct {
+		Line *BusDirInfo `json:"line"`
+	} `json:"data"`
+	Bus      []*RunningBus `json:"buses"`
+	Stations []*BusStation `json:"stations"`
+}
+
 func NewCllBus(citytel string) (*CllBus, error) {
 
 	cityinfo, found := MAP_CITY[citytel]
@@ -63,17 +71,34 @@ func NewCllBus(citytel string) (*CllBus, error) {
 }
 
 func (b *CllBus) LoadBusLineConf(lineid string) error {
-	// citytel := b.CityInfo.TelCode
+	_, found := b.BusLines[lineid]
+	if found {
+		return nil
+	}
 
-	// dir_arr := []string{"0", "1"}
-	// for _, dirid := range dir_arr {
-	// 	httreq, err := b.CityInfo.getHttpRequest(URL_CLL_BUS_URL, lineid, dirid)
-	// 	if err != nil {
-	// 		return err
-	// 	}
+	directions := make([]*BusDirInfo, 0)
+	dir_arr := []string{"0", "1"}
+	for _, dirid := range dir_arr {
+		httreq, err := b.CityInfo.getHttpRequest(URL_CLL_BUS_URL, lineid, dirid)
+		if err != nil {
+			return err
+		}
 
-	// 	httptool.HttpDoJsonr(httreq)
-	// }
+		cllresp := &CllLineDirBaseInfo{}
+		err = httptool.HttpDoJsonr(httreq, cllresp)
+		if err != nil {
+			return err
+		}
+
+		busdir := cllresp.Data.Line
+		busdir.Stations = cllresp.Stations
+		directions = append(directions, busdir)
+	}
+
+	b.BusLines[lineid] = &BusLine{
+		LineNum:   lineid,
+		Direction: directions,
+	}
 
 	return nil
 }

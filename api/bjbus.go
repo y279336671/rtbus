@@ -74,9 +74,9 @@ func (b *BJBusSess) LoadBusLineConf(linenum string) error {
 
 	busline := b.BusLines[linenum]
 	for _, busdir := range busline.Direction {
-		err_tmp := b.loadBusStation(linenum, busdir.ID)
+		err_tmp := b.loadBusStation(linenum, busdir.Direction)
 		if err_tmp != nil {
-			return errors.New(fmt.Sprintf("get %s(%s) failed:%v", linenum, busdir.ID, err_tmp))
+			return errors.New(fmt.Sprintf("get %s(%s) failed:%v", linenum, busdir.Direction, err_tmp))
 		}
 	}
 
@@ -129,7 +129,7 @@ func (b *BJBusSess) freshStatus(linenum string, busdir *BusDirInfo) error {
 		return nil
 	}
 
-	req_url := fmt.Sprintf(URL_BJ_FMT_FRESH_STATION_STATUS, linenum, busdir.ID, 1)
+	req_url := fmt.Sprintf(URL_BJ_FMT_FRESH_STATION_STATUS, linenum, busdir.Direction, 1)
 
 	//new http req
 	httpreq, err := b.newHttpRequest(req_url)
@@ -161,8 +161,8 @@ func (b *BJBusSess) freshStatus(linenum string, busdir *BusDirInfo) error {
 
 				buses_tmp = append(buses_tmp,
 					&RunningBus{
-						StationID: station_index,
-						Status:    "1",
+						Order:  station_index,
+						Status: "1",
 					})
 				map_cur[station_index] = buses_tmp
 			} else if station_status[2] == "busc" { //即将到站
@@ -173,8 +173,8 @@ func (b *BJBusSess) freshStatus(linenum string, busdir *BusDirInfo) error {
 
 				buses_tmp = append(buses_tmp,
 					&RunningBus{
-						StationID: station_index,
-						Status:    "0.5",
+						Order:  station_index,
+						Status: "0.5",
 					})
 				map_cur[station_index] = buses_tmp
 			}
@@ -183,8 +183,8 @@ func (b *BJBusSess) freshStatus(linenum string, busdir *BusDirInfo) error {
 
 	//更新存储
 	for i := 0; i < len(busdir.Stations); i++ {
-		sid := busdir.Stations[i].ID
-		buses_tmp, found := map_cur[sid]
+		order := busdir.Stations[i].Order
+		buses_tmp, found := map_cur[order]
 		if !found {
 			buses_tmp = make([]*RunningBus, 0)
 		}
@@ -217,8 +217,8 @@ func (b *BJBusSess) loadBusLineDirection(linenum string) error {
 
 	for _, id_direction := range id_direction_array {
 		BusDirInfo := &BusDirInfo{
-			ID:   id_direction[0],
-			Name: id_direction[1],
+			Direction: id_direction[0],
+			Name:      id_direction[1],
 		}
 
 		busline.Direction = append(busline.Direction, BusDirInfo)
@@ -241,7 +241,7 @@ func (b *BJBusSess) loadBusStation(linenum, dirid string) error {
 			busdir.Name2Index = make(map[string]int)
 		}
 
-		req_url := fmt.Sprintf(URL_BJ_FMT_LINE_STATION, linenum, busdir.ID)
+		req_url := fmt.Sprintf(URL_BJ_FMT_LINE_STATION, linenum, busdir.Direction)
 		httpreq, err := b.newHttpRequest(req_url)
 		if err != nil {
 			return err
@@ -256,10 +256,10 @@ func (b *BJBusSess) loadBusStation(linenum, dirid string) error {
 		}
 
 		for _, station := range station_array {
-			sid, _ := strconv.Atoi(station[0])
+			order, _ := strconv.Atoi(station[0])
 			busstation := &BusStation{
-				ID:   sid,
-				Name: station[1],
+				Order: order,
+				Sn:    station[1],
 			}
 
 			busdir.Name2Index[station[1]] = len(busdir.Stations)
@@ -323,7 +323,7 @@ func (b *BJBusSess) getBusDir(linenum, direction string) (*BusDirInfo, error) {
 	}
 
 	for _, busdir := range busline.Direction {
-		if busdir.Name != direction && busdir.ID != direction {
+		if busdir.Name != direction && busdir.Direction != direction {
 			continue
 		}
 
@@ -348,14 +348,14 @@ func (b *BJBusSess) Print() {
 			logger.Info("lineNum:%s Direction:%s Station:%s ~ %s\n",
 				busline.LineNum,
 				busdir.Name,
-				busdir.Stations[0].Name,
-				busdir.Stations[last_index-1].Name,
+				busdir.Stations[0].Sn,
+				busdir.Stations[last_index-1].Sn,
 			)
 
 			for _, station := range busdir.Stations {
 				if station.Buses != nil && len(station.Buses) > 0 {
 					for _, bus := range station.Buses {
-						logger.Info("%d:%s %s\n", station.ID, station.Name, bus.Status)
+						logger.Info("%d:%s %s\n", station.Order, station.Sn, bus.Status)
 					}
 				}
 			}

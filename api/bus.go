@@ -13,7 +13,7 @@ type BusDirInfo struct {
 	l          sync.Mutex
 	freshTime  int64
 	Name2Index map[string]int `json:"-"`
-	ID         string         `json:"id"`
+	Direction  string         `json:"direction"`
 	Name       string         `json:"name"`
 	StartSn    string         `json:"startsn,omitempty"`
 	EndSn      string         `json:"endsn,omitempty"`
@@ -25,16 +25,17 @@ type BusDirInfo struct {
 }
 
 type BusStation struct {
-	ID    int           `json:"id"`
-	Name  string        `json:"name,omitempty"`
+	Order int           `json:"order"`
+	Sn    string        `json:"sn,omitempty"`
 	Buses []*RunningBus `json:"buses,omitempty"`
 }
 
 type RunningBus struct {
-	StationID int     `json:"sid"`
-	Status    string  `json:"status"`
-	BusID     string  `json:"busid,omitempty"`
-	Lat       float64 `json:"lat,omitempty"`
-	Lng       float64 `json:"lng,omitempty"`
-	Distance  int     `json:"distance,omitempty"`
+	Order    int     `json:"order"`
+	Status   string  `json:"status"`
+	BusID    string  `json:"busid,omitempty"`
+	Lat      float64 `json:"lat,omitempty"`
+	Lng      float64 `json:"lng,omitempty"`
+	Distance int     `json:"distance,omitempty"`
+	SyncTime int     `json:"syncTime,omitempty"`
 }
