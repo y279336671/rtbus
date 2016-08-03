@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"sync"
 )
 
@@ -13,15 +14,17 @@ type BusDirInfo struct {
 	l          sync.Mutex
 	freshTime  int64
 	Name2Index map[string]int `json:"-"`
-	Direction  string         `json:"direction"`
-	Name       string         `json:"name"`
-	StartSn    string         `json:"startsn,omitempty"`
-	EndSn      string         `json:"endsn,omitempty"`
-	Price      string         `json:"price,omitempty"`
-	SnNum      int            `json:"stationsNum,omitempty"`
-	FirstTime  string         `json:"firstTime,omitempty"`
-	LastTime   string         `json:"lastTime,omitempty"`
-	Stations   []*BusStation  `json:"stations"`
+
+	ID        string        `json:"id"`
+	Direction int           `json:"direction,omitempty"`
+	Name      string        `json:"name"`
+	StartSn   string        `json:"startsn,omitempty"`
+	EndSn     string        `json:"endsn,omitempty"`
+	Price     string        `json:"price,omitempty"`
+	SnNum     int           `json:"stationsNum,omitempty"`
+	FirstTime string        `json:"firstTime,omitempty"`
+	LastTime  string        `json:"lastTime,omitempty"`
+	Stations  []*BusStation `json:"stations"`
 }
 
 type BusStation struct {
@@ -36,6 +39,52 @@ type RunningBus struct {
 	BusID    string  `json:"busid,omitempty"`
 	Lat      float64 `json:"lat,omitempty"`
 	Lng      float64 `json:"lng,omitempty"`
-	Distance int     `json:"distance,omitempty"`
+	Distance int     `json:"distanceToSc,omitempty"`
 	SyncTime int     `json:"syncTime,omitempty"`
+}
+
+func NewBusLine(lineid string) *BusLine {
+	return &BusLine{
+		LineNum:   lineid,
+		Direction: make([]*BusDirInfo, 0),
+	}
+}
+
+func (b *BusLine) GetBusInfo(dirid string) (*BusDirInfo, error) {
+	for _, busdir := range b.Direction {
+		if busdir.equal(dirid) {
+			return busdir, nil
+		}
+	}
+
+	return nil, errors.New("can't found the direction:" + dirid)
+}
+
+func (b *BusLine) GetRunningBus(dirid string) ([]*RunningBus, error) {
+	rbuses := make([]*RunningBus, 0)
+
+	busdir, err := b.GetBusInfo(dirid)
+	if err != nil {
+		return rbuses, err
+	}
+
+	for _, station := range busdir.Stations {
+		rbuses = append(rbuses, station.Buses...)
+	}
+
+	return rbuses, nil
+}
+
+func (s *BusDirInfo) getSnDesc() string {
+	return s.StartSn + "-" + s.EndSn
+}
+
+func (d *BusDirInfo) equal(dirid string) bool {
+	if d.ID == dirid ||
+		d.Name == dirid ||
+		dirid == d.getSnDesc() {
+		return true
+	} else {
+		return false
+	}
 }

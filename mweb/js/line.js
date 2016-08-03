@@ -89,8 +89,6 @@ function updateTimelineContainer(businfo,sid){
     for (var i=0;i<businfo.length;i++) {
         station = businfo[i];
 
-        console.log(station);
-
         //初始化
         var divid = "station_"+station.order;
         $("#"+divid).removeClass("cd-mylocation");
@@ -123,9 +121,7 @@ function refreshStationDiv(divid,station,sid) {
             }
         }
 
-        console.log(sid +"<=>"+station.order);
         if(sid > 0 && sid == station.order){
-            console.log("true...")
             $("#"+divid).addClass("cd-mylocation");
         }else {
             $("#"+divid).addClass("cd-bus");

@@ -6,18 +6,21 @@ import (
 )
 
 var (
-	BusSess *api.BJBusSess
-	logger  *logs.Blogger
+	BjBusSess   *api.BJBusSess
+	DCllBusPool *api.CllBusPool
+	logger      *logs.Blogger
 )
 
 func init() {
 	logger = logs.GetBlogger()
 
 	var err error
-	BusSess, err = api.NewBJBusSess()
+	BjBusSess, err = api.NewBJBusSess()
 	if err != nil {
 		panic(err)
 	}
+
+	DCllBusPool = api.NewCllBusPool()
 }
 
 type Response struct {
