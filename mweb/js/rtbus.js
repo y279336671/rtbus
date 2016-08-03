@@ -58,6 +58,8 @@ function getbusline(){
                     }else {
                         option = "<option value='"+busdir.id+"'>"+busdir.name+"</option>"
                     }
+
+                    console.log(busdir)
                     $("#rtbus_direction").append(option);
                 }
 
@@ -70,16 +72,17 @@ function getbusline(){
 
 function showstation(){
     direction = $("#rtbus_direction").val()
+    console.log(direction)
 
     $('#loadingToast').show();
     for (var i=0;i<businfo.direction.length;i++) {
         busdir = businfo.direction[i];
-        if(busdir.id === direction){
+
+        if(busdir.id == direction){
             $("#rtbus_station").empty();
 
             for (var i=0;i<busdir.stations.length;i++) {
-                station = busdir.stations[i]
-                $("#rtbus_station").append("<option value='"+station.id+"'>"+station.name+"</option>")
+                $("#rtbus_station").append("<option value='"+station.order+"'>"+station.sn+"</option>")
             }
             break
         }
