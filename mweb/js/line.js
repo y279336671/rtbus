@@ -141,17 +141,24 @@ function refreshStationDiv(divid,station,sid) {
         }
 
         //到站
+        var text = "";
         if(arrival) {
-            $("#"+divid).find("h2").after("<span class=\"cd-date\">到站</span>");
+            text = "到站";
         }else if(warrival){ //即将到站
-            var text = "即将到站";
             if(nearstation.distanceToSc && nearstation.distanceToSc > 0){
                 var intreval = nearstation.syncTime;
-                text = text+",还有"+nearstation.distanceToSc+"米("+intreval+"秒前刷新)";
+                text = "即将到站,还有"+nearstation.distanceToSc+"米";
             }else {
-                text = text+"...";
+                text = "即将到站...";
             }
-            $("#"+divid).find("h2").after("<span class=\"cd-date\">"+text+"</span>");
         }
+
+        if(nearstation.syncTime && nearstation.syncTime > 0){
+            var intreval = nearstation.syncTime;
+            text = "["+intreval+"秒前]"+text;
+        }else {
+            text = text+"...";
+        }
+        $("#"+divid).find("h2").after("<span class=\"cd-date\">"+text+"</span>");
     }
 }
