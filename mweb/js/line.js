@@ -87,23 +87,28 @@ function initTimelineContainer(businfo,sid){
 }
 
 function updateTimelineContainer(businfo,sid){
+    //初始化
+    var children = $("#cd-timeline").children("div");
+    for (var i = 0; i < children.length; i++) {
+        var child = children[i];
+        $(child).removeClass("cd-mylocation");
+        $(child).removeClass("cd-bus");
+        $(child).find("span").remove();
+        $(child).find("img").attr("src","vendor/images/cd-icon-location.svg");
+    }
+
+
     for (var i=0;i<businfo.length;i++) {
         station = businfo[i];
-
-        //初始化
         var divid = "station_"+station.order;
-        $("#"+divid).removeClass("cd-mylocation");
-        $("#"+divid).removeClass("cd-bus");
-        $("#"+divid).find("span").remove();
-        $("#"+divid).find("img").attr("src","vendor/images/cd-icon-location.svg");
-
+        
         //刷新div样式
         refreshStationDiv(divid,station,sid)
     }
 }
 
 function refreshStationDiv(divid,station,sid) {
-    console.log(station);
+    // console.log(station);
 
     //未到站
     if(!station.buses){
