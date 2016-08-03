@@ -82,6 +82,7 @@ function showstation(){
             $("#rtbus_station").empty();
 
             for (var i=0;i<busdir.stations.length;i++) {
+                var station = busdir.stations[i];
                 $("#rtbus_station").append("<option value='"+station.order+"'>"+station.sn+"</option>")
             }
             break
