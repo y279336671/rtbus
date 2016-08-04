@@ -56,7 +56,7 @@ func (b *BJBusSess) FreshToken() error {
 	var err error
 	b.token, err = getToken()
 	if err != nil {
-		return err
+		return errors.New("fresh token error:" + err.Error())
 	}
 	b.tokentime = curtime
 
@@ -141,12 +141,12 @@ func (b *BJBusSess) freshStatus(linenum string, busdir *BusDirInfo) error {
 	status_resp := &StationStatusResp{}
 	err = httptool.HttpDoJson(httpreq, status_resp)
 	if err != nil {
-		return err
+		return errors.New("URL:" + req_url + ",error::::" + err.Error())
 	}
 
 	station_status_array, err2 := httptool.MatchAll(REG_BUS_STATTION_STATUS, []byte(status_resp.HTML))
 	if err2 != nil {
-		return err2
+		return errors.New("URL:" + req_url + ",error::::" + err2.Error())
 	}
 
 	map_cur := make(map[int][]*RunningBus)
