@@ -307,9 +307,10 @@ a.cd-read-more:hover{text-decoration:none; background-color: #424242;  }
 
 .cd-fav-div {
   float:right;
-  width:25px;
+  width: 45px;
+  height: 30px;
 }
 
 .cd-fav-div img {
-  width:100%;
+  width:25px;
 }

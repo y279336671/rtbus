@@ -73,7 +73,7 @@ function renderLineInfo(){
             $('#loadingToast').hide();
 
             //继续刷新
-            //setTimeout(renderLineInfo,10100);
+            setTimeout(renderLineInfo,10100);
         },
         error: function(){
             $('#loadingToast').hide();
