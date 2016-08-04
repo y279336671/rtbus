@@ -72,8 +72,9 @@ function renderLineInfo(){
 function initTimelineContainer(businfo){
     //修改标题
     var dirname = businfo[0].sn+"-"+businfo[businfo.length-1].sn;
-    var title = cache.params.lineid+"路("+dirname+")实时公交";
-    $(document).find("title").text(title);
+    var title = cache.params.lineid+"路("+dirname+")";
+    $(document).find("title").text(title+"实时公交");
+    $("#rtbus_title").text(title);
 
     $("#cd-timeline").empty();
     for (var i=0;i<businfo.length;i++) {
