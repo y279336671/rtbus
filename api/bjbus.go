@@ -276,10 +276,8 @@ func (b *BJBusSess) newHttpRequest(req_url string) (*http.Request, error) {
 		return nil, err
 	}
 
-	//6小时刷新一次token
-	if time.Now().Unix()-b.tokentime >= 3600*6 {
-		b.FreshToken()
-	}
+	//刷新token
+	b.FreshToken()
 
 	for _, c := range b.token {
 		httpreq.AddCookie(c)
