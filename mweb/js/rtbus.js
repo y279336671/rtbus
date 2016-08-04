@@ -74,9 +74,15 @@ function getbusline(){
 }
 
 function showstation(){
-    direction = $("#rtbus_direction").val();
     citycode =  $("#rtbus_city").val();
-    cityname = $("#rtbus_city option").eq($("#rtbus_city").attr("selectedIndex")).text()
+    cityname = $("#rtbus_city option").eq($("#rtbus_city").attr("selectedIndex")).text();
+    direction = $("#rtbus_direction").val();
+    busline = $("#busline").val();
+
+    //未输入公交线路
+    if(busline === ""){
+        return
+    }
 
     $('#loadingToast').show();
     for (var i=0;i<businfo.direction.length;i++) {
