@@ -74,7 +74,8 @@ function initTimelineContainer(businfo){
     var dirname = businfo[0].sn+"-"+businfo[businfo.length-1].sn;
     var title = cache.params.lineid+"路("+dirname+")";
     $(document).find("title").text(title+"实时公交");
-    $("#rtbus_title").text(title);
+    $("#rtbus_title").text(cache.params.lineid+"路实时公交");
+    $("#rtbus_pagedesc").text(dirname);
 
     $("#cd-timeline").empty();
     for (var i=0;i<businfo.length;i++) {
