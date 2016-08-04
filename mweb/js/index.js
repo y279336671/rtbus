@@ -32,12 +32,11 @@ $(function () {
             var lineid = this.params.lineid;
             var dirid = this.params.dirid;
             var sid = this.params.sid;
-
-            //渲染
             $.getScript("js/line.js",function(){
                 renderLineInfoByParams(cityid,lineid,dirid,sid);
+                
+                $('.container').on('click', '.cd-fav-div', changefavorite);
             });
-
         },
         bind: function () {}
     }

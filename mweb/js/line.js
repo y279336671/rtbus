@@ -13,6 +13,19 @@ function renderLineInfoByParams(city,lineid,dirid,sid){
     renderLineInfo();
 }
 
+function changefavorite(){
+    var img = $(this).find("img");
+    if(img.hasClass("cd-fav-img")) {
+        img.attr("src","vendor/images/unfavorite.svg");
+        img.removeClass("cd-fav-img");
+        img.addClass("cd-unfav-img");
+    }else {
+        img.attr("src","vendor/images/favorite.svg");
+        img.removeClass("cd-unfav-img");
+        img.addClass("cd-fav-img");
+    }
+}
+
 function renderLineInfo(){
     cache.times++;
     // console.log(lineid);
@@ -60,7 +73,7 @@ function renderLineInfo(){
             $('#loadingToast').hide();
 
             //继续刷新
-            setTimeout(renderLineInfo,10100);
+            //setTimeout(renderLineInfo,10100);
         },
         error: function(){
             $('#loadingToast').hide();
@@ -85,9 +98,12 @@ function initTimelineContainer(businfo){
         var divh = "<div id=\""+divid;
         var divf= "\" class=\"cd-timeline-block\">\
             <div class=\"cd-timeline-img\">\
-                <img src=\"vendor/images/cd-icon-location.svg\">\
+                <img class=\"cd-icon\" src=\"vendor/images/cd-icon-location.svg\">\
             </div>\
             <div class=\"cd-timeline-content\">\
+                <div class=\"cd-fav-div\">\
+                    <img class=\"cd-fav-img\" src=\"vendor/images/unfavorite.svg\">\
+                </div>\
                 <h2></h2>\
             </div>\
         </div>";
@@ -113,7 +129,7 @@ function updateTimelineContainer(businfo){
         // $(child).removeClass("cd-mylocation");
         $(child).removeClass("cd-bus");
         $(child).find("span").remove();
-        $(child).find("img").attr("src","vendor/images/cd-icon-location.svg");
+        $(child).find(".cd-icon").attr("src","vendor/images/cd-icon-location.svg");
     }
 
 
@@ -158,7 +174,7 @@ function refreshStationDiv(divid,station) {
             $("#"+divid).addClass("cd-mylocation");
         }else {
             $("#"+divid).addClass("cd-bus");
-            $("#"+divid).find("img").attr("src","vendor/images/bus2.png");
+            $("#"+divid).find("cd-icon").attr("src","vendor/images/bus.svg");
         }
 
         //到站

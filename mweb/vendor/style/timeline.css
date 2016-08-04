@@ -125,7 +125,7 @@ Main components
   font-weight: 250;
 }
 
-.cd-timeline-img img {
+.cd-timeline-img .cd-icon {
   display: block;
   width: 24px;
   height: 24px;
@@ -134,13 +134,6 @@ Main components
   top: 50%;
   margin-left: -12px;
   margin-top: -12px;
-}
-.cd-bus img{
-  display: block;
-  width: 30px;
-  height: 20px;
-  margin-left: -16px;
-  margin-top: -10px;
 }
 
 .cd-timeline-img {
@@ -310,4 +303,14 @@ a.cd-read-more:hover{text-decoration:none; background-color: #424242;  }
     -moz-animation: cd-bounce-2-inverse 0.6s;
     animation: cd-bounce-2-inverse 0.6s;
   }
+}
+
+.cd-fav-div {
+  float:right;
+  width:25px;
+  height:54px;
+}
+
+.cd-fav-div img {
+  width:100%;
 }
