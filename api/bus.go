@@ -56,16 +56,24 @@ func NewBusLine(lineid string) *BusLine {
 }
 
 func (b *BusLine) GetBusDir(dirid string, r RefreshBuslineDir) (*BusDirInfo, error) {
+	busdir, err := b.getBusDir(dirid)
+	if err != nil {
+		return nil, err
+	}
+
+	curtime := time.Now().Unix()
+	if curtime-busdir.freshTime >= 10 {
+		err := r.freshBuslineDir(b.LineNum, dirid)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return busdir, nil
+}
+
+func (b *BusLine) getBusDir(dirid string) (*BusDirInfo, error) {
 	for _, busdir := range b.Direction {
 		if busdir.equal(dirid) {
-			//刷新数据
-			curtime := time.Now().Unix()
-			if curtime-busdir.freshTime < 10 {
-				err := r.freshBuslineDir(b.LineNum, dirid)
-				if err != nil {
-					return nil, err
-				}
-			}
 			return busdir, nil
 		}
 	}

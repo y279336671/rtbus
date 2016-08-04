@@ -116,12 +116,12 @@ func (b *BJBusSess) FreshBusline(lineid string) error {
 func (b *BJBusSess) freshBuslineDir(lineid, dirid string) error {
 	bl := b.BusLines[lineid]
 
-	busdir, _ := bl.GetBusDir(dirid, b)
+	busdir, _ := bl.getBusDir(dirid)
 	busdir.l.Lock()
 	defer busdir.l.Unlock()
 
 	curtime := time.Now().Unix()
-	if curtime-busdir.freshTime >= 10 {
+	if curtime-busdir.freshTime <= 10 {
 		return nil
 	}
 
