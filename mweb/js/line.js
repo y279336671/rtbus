@@ -6,7 +6,7 @@ var cache = {
 
 function renderLineInfoByParams(city,lineid,dirid,sid){
     cache.params.cityid = city;
-    cache.params.lineid = lineid;
+    cache.params.lineid = decodeURI(lineid);
     cache.params.dirid = dirid;
     cache.params.sid = sid;
 

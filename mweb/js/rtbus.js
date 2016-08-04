@@ -35,7 +35,7 @@ function gotoline(){
         return
     }
 
-    location.hash = "#/line/"+city+"/"+linenum+"/"+dirid+"/"+sid;
+    location.hash = "#/line/"+city+"/"+ encodeURI(linenum)+"/"+dirid+"/"+sid;
 }
 
 //全局变量
