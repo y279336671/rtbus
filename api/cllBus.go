@@ -58,12 +58,12 @@ func (b *CllBus) GetBusLine(lineid string) (*BusLine, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else {
+	} /* else {
 		err := b.freshBusline(lineid)
 		if err != nil {
 			return nil, err
 		}
-	}
+	} */
 
 	return b.BusLines[lineid], nil
 }
@@ -101,11 +101,12 @@ func (b *CllBus) freshBuslineDir(lineid, dirid string) error {
 
 	//初始化
 	bl := b.BusLines[lineid]
-	busdir, err := bl.GetBusInfo(dirid)
+	busdir, err := bl.GetBusDir(dirid, b)
 
 	//第一次加载(bus+station)
 	if err != nil {
 		busdir = cllresp.Data.Line
+
 		busdir.Name = busdir.StartSn + "-" + busdir.EndSn
 		busdir.ID = fmt.Sprintf("%d", busdir.Direction)
 		busdir.Direction = 0
@@ -129,7 +130,7 @@ func (b *CllBus) freshBuslineDir(lineid, dirid string) error {
 
 		return nil
 	} else {
-		//更新bus信息
+		//更新bus该方向信息
 		for _, s := range busdir.Stations {
 			s.Buses = make([]*RunningBus, 0)
 			for _, rbus := range cllresp.Data.Bus {
@@ -153,7 +154,7 @@ func (b *CllBus) freshBuslineDir(lineid, dirid string) error {
 
 func (c *CityInfo) getHttpRequest(req_url, lineid, dirid string) (*http.Request, error) {
 	req_url = req_url + "?" + c.getParams(lineid, dirid)
-	fmt.Println(req_url)
+	// fmt.Println(req_url)
 
 	httpreq, err := http.NewRequest("GET", req_url, nil)
 	if err != nil {

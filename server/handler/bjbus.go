@@ -5,6 +5,38 @@ import (
 	"github.com/martini-contrib/render"
 )
 
+func BJBusLineHandler(params martini.Params, r render.Render) {
+	if BjBusSess == nil {
+		r.JSON(
+			502,
+			&Response{502, "bjbus sess token error", nil},
+		)
+		return
+	}
+
+	lineid := params["linenum"]
+
+	busline, err := BjBusSess.GetBusLine(lineid)
+	if err != nil {
+		logger.Error("%v", err)
+		r.JSON(
+			502,
+			&Response{503, err.Error(), nil},
+		)
+		return
+	}
+
+	r.JSON(200,
+		&Response{
+			0,
+			"OK",
+			busline,
+		},
+	)
+
+	return
+}
+
 func BJBusSnHandler(params martini.Params, r render.Render) {
 	if BjBusSess == nil {
 		r.JSON(
@@ -14,27 +46,41 @@ func BJBusSnHandler(params martini.Params, r render.Render) {
 		return
 	}
 
-	stations, err := BjBusSess.GetLineStationInfo(params["linenum"], params["direction"])
-	if err != nil {
-		logger.Error("%v", err)
+	lineid := params["linenum"]
+	dirid := params["direction"]
+
+	//路线
+	busline, err2 := BjBusSess.GetBusLine(lineid)
+	if err2 != nil {
 		r.JSON(
 			502,
-			&Response{503, err.Error(), nil},
+			&Response{502, err2.Error(), nil},
 		)
-	} else {
-		r.JSON(200,
-			&Response{
-				0,
-				"OK",
-				stations,
-			},
-		)
+		return
 	}
+
+	//方向
+	busdir, err3 := busline.GetBusDir(dirid, BjBusSess)
+	if err3 != nil {
+		r.JSON(
+			502,
+			&Response{502, err3.Error(), nil},
+		)
+		return
+	}
+
+	r.JSON(200,
+		&Response{
+			0,
+			"OK",
+			busdir.Stations,
+		},
+	)
 
 	return
 }
 
-func BJBusSnBusHandler(params martini.Params, r render.Render) {
+func BJRunningBusHandler(params martini.Params, r render.Render) {
 	if BjBusSess == nil {
 		r.JSON(
 			502,
@@ -43,52 +89,35 @@ func BJBusSnBusHandler(params martini.Params, r render.Render) {
 		return
 	}
 
-	buses, err := BjBusSess.GetLineBusInfo(params["linenum"], params["direction"])
-	if err != nil {
-		logger.Error("%v", err)
+	lineid := params["linenum"]
+	dirid := params["direction"]
+
+	//路线
+	busline, err2 := BjBusSess.GetBusLine(lineid)
+	if err2 != nil {
 		r.JSON(
 			502,
-			&Response{503, err.Error(), nil},
-		)
-	} else {
-		r.JSON(200,
-			&Response{
-				0,
-				"OK",
-				buses,
-			},
-		)
-	}
-
-	return
-}
-
-func BJBusLineHandler(params martini.Params, r render.Render) {
-	if BjBusSess == nil {
-		r.JSON(
-			504,
-			&Response{504, "bjbus sess token error", nil},
+			&Response{502, err2.Error(), nil},
 		)
 		return
 	}
 
-	err := BjBusSess.LoadBusLineConf(params["linenum"])
-	if err != nil {
-		logger.Error("%v", err)
-
+	//方向
+	rbus, err3 := busline.GetRunningBus(dirid, BjBusSess)
+	if err3 != nil {
 		r.JSON(
 			502,
-			&Response{505, err.Error(), nil},
+			&Response{502, err3.Error(), nil},
 		)
 		return
 	}
 
-	busline := BjBusSess.BusLines[params["linenum"]]
 	r.JSON(200,
 		&Response{
 			0,
 			"OK",
-			busline,
+			rbus,
 		},
 	)
+	return
 }

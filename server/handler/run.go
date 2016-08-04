@@ -11,11 +11,11 @@ func Run() {
 	m.Use(render.Renderer())
 	m.Get("/rtbus/bj/direction/:linenum", BJBusLineHandler)
 	m.Get("/rtbus/bj/station/:linenum/:direction", BJBusSnHandler)
-	m.Get("/rtbus/bj/bus/:linenum/:direction", BJBusSnBusHandler)
+	m.Get("/rtbus/bj/bus/:linenum/:direction", BJRunningBusHandler)
 
 	m.Get(`/rtbus/:city/direction/:linenum`, CllBusLineHandler)
 	m.Get(`/rtbus/:city/station/:linenum/:direction`, CllBusSnHandler)
-	m.Get(`/rtbus/:city/bus/:linenum/:direction`, CllBusSnBusHandler)
+	m.Get(`/rtbus/:city/bus/:linenum/:direction`, CllRunningBusHandler)
 
 	m.RunOnAddr(":1315")
 }

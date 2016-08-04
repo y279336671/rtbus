@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"sync"
+	"time"
 )
 
 type BusLine struct {
@@ -43,6 +44,10 @@ type RunningBus struct {
 	SyncTime int64   `json:"syncTime,omitempty"`
 }
 
+type RefreshBuslineDir interface {
+	freshBuslineDir(lineid, dirid string) error
+}
+
 func NewBusLine(lineid string) *BusLine {
 	return &BusLine{
 		LineNum:   lineid,
@@ -50,9 +55,17 @@ func NewBusLine(lineid string) *BusLine {
 	}
 }
 
-func (b *BusLine) GetBusInfo(dirid string) (*BusDirInfo, error) {
+func (b *BusLine) GetBusDir(dirid string, r RefreshBuslineDir) (*BusDirInfo, error) {
 	for _, busdir := range b.Direction {
 		if busdir.equal(dirid) {
+			//刷新数据
+			curtime := time.Now().Unix()
+			if curtime-busdir.freshTime < 10 {
+				err := r.freshBuslineDir(b.LineNum, dirid)
+				if err != nil {
+					return nil, err
+				}
+			}
 			return busdir, nil
 		}
 	}
@@ -60,10 +73,10 @@ func (b *BusLine) GetBusInfo(dirid string) (*BusDirInfo, error) {
 	return nil, errors.New("can't found the direction:" + dirid)
 }
 
-func (b *BusLine) GetRunningBus(dirid string) ([]*BusStation, error) {
+func (b *BusLine) GetRunningBus(dirid string, r RefreshBuslineDir) ([]*BusStation, error) {
 	rbuses := make([]*BusStation, 0)
 
-	busdir, err := b.GetBusInfo(dirid)
+	busdir, err := b.GetBusDir(dirid, r)
 	if err != nil {
 		return rbuses, err
 	}

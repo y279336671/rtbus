@@ -65,7 +65,7 @@ func CllBusSnHandler(params martini.Params, r render.Render) {
 	}
 
 	//方向
-	businfo, err3 := busline.GetBusInfo(dirid)
+	busdir, err3 := busline.GetBusDir(dirid, cllbus)
 	if err3 != nil {
 		r.JSON(
 			502,
@@ -78,12 +78,12 @@ func CllBusSnHandler(params martini.Params, r render.Render) {
 		&Response{
 			0,
 			"OK",
-			businfo.Stations,
+			busdir.Stations,
 		},
 	)
 }
 
-func CllBusSnBusHandler(params martini.Params, r render.Render) {
+func CllRunningBusHandler(params martini.Params, r render.Render) {
 	citytel := params["city"]
 	lineid := params["linenum"]
 	dirid := params["direction"]
@@ -109,7 +109,7 @@ func CllBusSnBusHandler(params martini.Params, r render.Render) {
 	}
 
 	//方向
-	rbus, err3 := busline.GetRunningBus(dirid)
+	rbus, err3 := busline.GetRunningBus(dirid, cllbus)
 	if err3 != nil {
 		r.JSON(
 			502,

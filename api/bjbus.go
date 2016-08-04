@@ -36,7 +36,7 @@ func NewBJBusSess() (*BJBusSess, error) {
 		BusLines: make(map[string]*BusLine),
 	}
 
-	err := b.FreshToken()
+	err := b.refreshToken()
 	if err != nil {
 		return b, errors.New("get token failed:" + err.Error())
 	} else {
@@ -44,94 +44,89 @@ func NewBJBusSess() (*BJBusSess, error) {
 	}
 }
 
-func (b *BJBusSess) FreshToken() error {
+func (b *BJBusSess) GetBusLine(lineid string) (*BusLine, error) {
 	b.l.Lock()
 	defer b.l.Unlock()
 
-	curtime := time.Now().Unix()
-	if time.Duration(curtime-b.tokentime)*time.Second < 30*time.Minute {
-		return nil
+	_, found := b.BusLines[lineid]
+	if !found {
+		err := b.initBusline(lineid)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	var err error
-	b.token, err = getToken()
-	if err != nil {
-		return errors.New("fresh token error:" + err.Error())
-	}
-	b.tokentime = curtime
-
-	return nil
+	return b.BusLines[lineid], nil
 }
 
-func (b *BJBusSess) LoadBusLineConf(linenum string) error {
-	b.l.Lock()
-	defer b.l.Unlock()
+func (b *BJBusSess) initBusline(lineid string) error {
+	bl := NewBusLine(lineid)
+	b.BusLines[lineid] = bl
 
-	err := b.loadBusLineDirection(linenum)
+	return b.initBusLineDirs(lineid)
+}
+
+func (b *BJBusSess) initBusLineDirs(lineid string) error {
+	req_url := fmt.Sprintf(URL_BJ_FMT_LINE_DIRECTION, lineid)
+
+	//new http req
+	httpreq, err := b.newHttpRequest(req_url)
 	if err != nil {
-		return errors.New(fmt.Sprintf("get %s line direction info failed:%s", linenum, err.Error()))
+		return err
 	}
 
-	busline := b.BusLines[linenum]
-	for _, busdir := range busline.Direction {
-		err_tmp := b.loadBusStation(linenum, busdir.ID)
-		if err_tmp != nil {
-			return errors.New(fmt.Sprintf("get %s(%s) failed:%v", linenum, busdir.ID, err_tmp))
+	//http get
+	id_direction_array, err := httptool.HttpDoAllRegexp(httpreq, REG_BUS_LINE_DIRECTION)
+	if err != nil {
+		return err
+	} else if len(id_direction_array) == 0 {
+		return errors.New("can't get anything of direction info!")
+	}
+
+	busline := b.BusLines[lineid]
+	for _, id_direction := range id_direction_array {
+		busdir := &BusDirInfo{
+			ID:   id_direction[0],
+			Name: id_direction[1],
+		}
+		busline.Direction = append(busline.Direction, busdir)
+
+		//加载公交站信息
+		err := b.loadBusStation(lineid, busdir.ID)
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-func (b *BJBusSess) FreshStatus(linenum, direction string) error {
-	err := b.FreshToken()
-	if err != nil {
-		return err
-	}
+func (b *BJBusSess) FreshBusline(lineid string) error {
+	busline := b.BusLines[lineid]
 
-	busdir, err_tmp := b.getBusDir(linenum, direction)
-	if err_tmp != nil {
-		return err_tmp
-	}
-
-	err_tmp = b.freshStatus(linenum, busdir)
-	if err_tmp != nil {
-		return err_tmp
+	for _, busdir := range busline.Direction {
+		err := b.freshBuslineDir(lineid, busdir.ID)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
+func (b *BJBusSess) freshBuslineDir(lineid, dirid string) error {
+	bl := b.BusLines[lineid]
 
-func (b *BJBusSess) FreshStatusByStation(linenum, direction, station string) error {
-	err := b.FreshToken()
-	if err != nil {
-		return err
-	}
-
-	busdir, err_tmp := b.getBusDir(linenum, direction)
-	if err_tmp != nil {
-		return err_tmp
-	}
-
-	err_tmp = b.freshStatus(linenum, busdir)
-	if err_tmp != nil {
-		return err_tmp
-	}
-
-	return nil
-}
-
-func (b *BJBusSess) freshStatus(linenum string, busdir *BusDirInfo) error {
+	busdir, _ := bl.GetBusDir(dirid, b)
 	busdir.l.Lock()
 	defer busdir.l.Unlock()
 
-	if time.Now().Unix()-busdir.freshTime < 10 {
+	curtime := time.Now().Unix()
+	if curtime-busdir.freshTime >= 10 {
 		return nil
 	}
 
-	req_url := fmt.Sprintf(URL_BJ_FMT_FRESH_STATION_STATUS, linenum, busdir.ID, 1)
-
-	//new http req
+	//更新该方向bus信息
+	req_url := fmt.Sprintf(URL_BJ_FMT_FRESH_STATION_STATUS, lineid, busdir.ID, 1)
 	httpreq, err := b.newHttpRequest(req_url)
 	if err != nil {
 		return err
@@ -144,11 +139,13 @@ func (b *BJBusSess) freshStatus(linenum string, busdir *BusDirInfo) error {
 		return errors.New("URL:" + req_url + ",error::::" + err.Error())
 	}
 
+	//解析http response
 	station_status_array, err2 := httptool.MatchAll(REG_BUS_STATTION_STATUS, []byte(status_resp.HTML))
 	if err2 != nil {
 		return errors.New("URL:" + req_url + ",error::::" + err2.Error())
 	}
 
+	//当前公交状况
 	map_cur := make(map[int][]*RunningBus)
 	for _, station_status := range station_status_array {
 		station_index, err := strconv.Atoi(station_status[0])
@@ -191,54 +188,17 @@ func (b *BJBusSess) freshStatus(linenum string, busdir *BusDirInfo) error {
 		busdir.Stations[i].Buses = buses_tmp
 	}
 
-	busdir.freshTime = time.Now().Unix()
+	busdir.freshTime = curtime
 
 	return nil
-}
-
-func (b *BJBusSess) loadBusLineDirection(linenum string) error {
-	busline := &BusLine{LineNum: linenum}
-
-	req_url := fmt.Sprintf(URL_BJ_FMT_LINE_DIRECTION, linenum)
-
-	//new http req
-	httpreq, err := b.newHttpRequest(req_url)
-	if err != nil {
-		return err
-	}
-
-	//http get
-	id_direction_array, err := httptool.HttpDoAllRegexp(httpreq, REG_BUS_LINE_DIRECTION)
-	if err != nil {
-		return err
-	} else if len(id_direction_array) == 0 {
-		return errors.New("can't get anything of direction info!")
-	}
-
-	for _, id_direction := range id_direction_array {
-		BusDirInfo := &BusDirInfo{
-			ID:   id_direction[0],
-			Name: id_direction[1],
-		}
-
-		busline.Direction = append(busline.Direction, BusDirInfo)
-	}
-	b.BusLines[linenum] = busline
-
-	return nil
-
 }
 
 func (b *BJBusSess) loadBusStation(linenum, dirid string) error {
 	busline := b.BusLines[linenum]
 
 	for _, busdir := range busline.Direction {
-		if len(busdir.Stations) > 0 {
+		if !busdir.equal(dirid) {
 			continue
-		}
-
-		if busdir.Name2Index == nil {
-			busdir.Name2Index = make(map[string]int)
 		}
 
 		req_url := fmt.Sprintf(URL_BJ_FMT_LINE_STATION, linenum, busdir.ID)
@@ -262,9 +222,10 @@ func (b *BJBusSess) loadBusStation(linenum, dirid string) error {
 				Sn:    station[1],
 			}
 
-			busdir.Name2Index[station[1]] = len(busdir.Stations)
 			busdir.Stations = append(busdir.Stations, busstation)
 		}
+
+		return nil
 	}
 
 	return nil
@@ -277,7 +238,7 @@ func (b *BJBusSess) newHttpRequest(req_url string) (*http.Request, error) {
 	}
 
 	//刷新token
-	b.FreshToken()
+	b.refreshToken()
 
 	for _, c := range b.token {
 		httpreq.AddCookie(c)
@@ -285,55 +246,6 @@ func (b *BJBusSess) newHttpRequest(req_url string) (*http.Request, error) {
 	httpreq.Header.Add("X-Requested-With", "XMLHttpRequest")
 
 	return httpreq, nil
-}
-
-func (b *BJBusSess) GetLineBusInfo(linenum, direction string) ([]*BusStation, error) {
-	busdir, err2 := b.getBusDir(linenum, direction)
-	if err2 != nil {
-		return nil, err2
-	}
-
-	rbuses := make([]*BusStation, 0)
-	for _, s := range busdir.Stations {
-		rbuses = append(rbuses, s)
-	}
-
-	return rbuses, nil
-}
-
-func (b *BJBusSess) GetLineStationInfo(linenum, direction string) ([]*BusStation, error) {
-	busdir, err2 := b.getBusDir(linenum, direction)
-	if err2 != nil {
-		return nil, err2
-	}
-
-	return busdir.Stations, nil
-}
-
-func (b *BJBusSess) getBusDir(linenum, direction string) (*BusDirInfo, error) {
-	busline, found := b.BusLines[linenum]
-	if !found {
-		err := b.LoadBusLineConf(linenum)
-		if err != nil {
-			return nil, err
-		}
-		busline = b.BusLines[linenum]
-	}
-
-	for _, busdir := range busline.Direction {
-		if busdir.Name != direction && busdir.ID != direction {
-			continue
-		}
-
-		err_tmp := b.freshStatus(linenum, busdir)
-		if err_tmp != nil {
-			return nil, err_tmp
-		}
-
-		return busdir, nil
-	}
-
-	return nil, errors.New("not found")
 }
 
 func (b *BJBusSess) Print() {
@@ -359,4 +271,20 @@ func (b *BJBusSess) Print() {
 			}
 		}
 	}
+}
+
+func (b *BJBusSess) refreshToken() error {
+	curtime := time.Now().Unix()
+	if time.Duration(curtime-b.tokentime)*time.Second < 30*time.Minute {
+		return nil
+	}
+
+	var err error
+	b.token, err = getToken()
+	if err != nil {
+		return errors.New("fresh token error:" + err.Error())
+	}
+	b.tokentime = curtime
+
+	return nil
 }

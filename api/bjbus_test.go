@@ -13,22 +13,15 @@ func TestBjBus(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = bus.LoadBusLineConf("675")
+	bl, err := bus.GetBusLine("675")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	for i := 0; i < 1; i++ {
-		busline := bus.BusLines["675"]
-
-		for _, dir := range busline.Direction {
-			err = bus.FreshStatus(busline.LineNum, dir.ID)
-			if err != nil {
-				t.Error(err)
-			}
-		}
-
-		bus.Print()
+	if len(bl.Direction) == 0 {
+		t.Fatal("can't get the directions of the 318 road")
 	}
+
+	bus.Print()
 
 }
