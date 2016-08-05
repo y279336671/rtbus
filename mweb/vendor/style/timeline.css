@@ -105,6 +105,8 @@ Main components
 .cd-timeline-content h2 {
   color: #7f8c97;
   font-weight: 400;
+  font-size: 1.12em;
+  padding-top: 3px;
 }
 
 .cd-mylocation .cd-timeline-content span {
@@ -169,9 +171,10 @@ Main components
 .cd-timeline-content {
   position: relative;
   margin-left: 60px;
+  margin-right: 20px;
   background: white;
   border-radius: 0.25em;
-  padding: 0.8em;
+  padding: 0.5em;
   box-shadow: 0 3px 0 #d7e4ed;
 }
 .cd-timeline-content:after {
@@ -203,8 +206,8 @@ Main components
 a.cd-read-more:hover{text-decoration:none; background-color: #424242;  }
 .cd-timeline-content .cd-date {
   float: left;
-  padding: .8em 0;
-  opacity: .7;
+  padding: .6em 0 0;
+  opacity: .6;
 }
 .cd-timeline-content::before {
   content: '';
@@ -307,10 +310,11 @@ a.cd-read-more:hover{text-decoration:none; background-color: #424242;  }
 
 .cd-fav-div {
   float:right;
-  width: 45px;
+  width: 25px;
   height: 30px;
+  display: block;
 }
 
 .cd-fav-div img {
-  width:25px;
+  width:20px;
 }
