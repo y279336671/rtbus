@@ -68,6 +68,11 @@ function getbusline(){
 
                 showstation();
                 $('#loadingToast').hide();
+            }，
+            error:function(){
+                $("#busline").attr("placeholder",busline+"路公交暂不支持实时查询，请重新输入");
+                $("#rtbus_direction").focus();
+                $('#loadingToast').hide();
             }
         })
     }
