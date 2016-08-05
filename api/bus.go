@@ -61,13 +61,24 @@ func (b *BusLine) GetBusDir(dirid string, r RefreshBuslineDir) (*BusDirInfo, err
 		return nil, err
 	}
 
+	busdir.l.Lock()
+	defer busdir.l.Unlock()
+
+	//无需重新加载 仅更新同步时间即可
 	curtime := time.Now().Unix()
-	if curtime-busdir.freshTime >= 10 {
-		err := r.freshBuslineDir(b.LineNum, dirid)
+	if curtime-busdir.freshTime < 10 {
+		for _, s := range busdir.Stations {
+			for _, rbus := range s.Buses {
+				rbus.SyncTime = rbus.SyncTime + (curtime - busdir.freshTime)
+			}
+		}
+	} else {
+		err = r.freshBuslineDir(b.LineNum, dirid)
 		if err != nil {
 			return nil, err
 		}
 	}
+
 	return busdir, nil
 }
 

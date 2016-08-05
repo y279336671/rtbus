@@ -58,91 +58,97 @@ func (b *CllBus) GetBusLine(lineid string) (*BusLine, error) {
 		if err != nil {
 			return nil, err
 		}
-	} /* else {
-		err := b.freshBusline(lineid)
-		if err != nil {
-			return nil, err
-		}
-	} */
+	}
 
 	return b.BusLines[lineid], nil
 }
 
 func (b *CllBus) initBusline(lineid string) error {
-	bl := NewBusLine(lineid)
-	b.BusLines[lineid] = bl
+	busdirs := make([]*BusDirInfo, 0)
 
-	return b.freshBusline(lineid)
-}
-
-func (b *CllBus) freshBusline(lineid string) error {
 	dir_arr := []string{"0", "1"}
 	for _, dirid := range dir_arr {
-		err := b.freshBuslineDir(lineid, dirid)
+		cllresp, err := b.loadBuslineDirInfo(lineid, dirid)
 		if err != nil {
 			return err
 		}
-	}
 
-	return nil
-}
-
-func (b *CllBus) freshBuslineDir(lineid, dirid string) error {
-	httreq, err := b.CityInfo.getHttpRequest(URL_CLL_BUS_URL, lineid, dirid)
-	if err != nil {
-		return err
-	}
-
-	cllresp := &CllLineDirBaseInfo{}
-	err = httptool.HttpDoJsonr(httreq, cllresp)
-	if err != nil {
-		return err
-	}
-
-	//初始化
-	bl := b.BusLines[lineid]
-	busdir, err := bl.GetBusDir(dirid, b)
-
-	//第一次加载(bus+station)
-	if err != nil {
-		busdir = cllresp.Data.Line
-
+		busdir := cllresp.Data.Line
 		busdir.Name = busdir.StartSn + "-" + busdir.EndSn
 		busdir.ID = fmt.Sprintf("%d", busdir.Direction)
 		busdir.Direction = 0
 		busdir.Stations = cllresp.Data.Stations
-		bl.Direction = append(bl.Direction, busdir)
+
+		busdirs = append(busdirs, busdir)
 	}
 
-	busdir.l.Lock()
-	defer busdir.l.Unlock()
+	bl := NewBusLine(lineid)
+	bl.Direction = busdirs
+	b.BusLines[lineid] = bl
 
-	curtime := time.Now().Unix()
-	if curtime-busdir.freshTime < 10 {
-		//更新同步时间
-		if curtime-busdir.freshTime > 5 {
-			for _, s := range busdir.Stations {
-				for _, rbus := range s.Buses {
-					rbus.SyncTime = rbus.SyncTime + (curtime - busdir.freshTime)
-				}
-			}
+	return nil
+}
+
+/******************************************************
+func (b *CllBus) freshBusline(lineid string) error {
+	bl := b.BusLines[lineid]
+
+	for _, busdir := range bl.Direction {
+		busdir.l.Lock()
+
+		err := b.freshBuslineDir(lineid, busdir.ID)
+		if err != nil {
+			busdir.l.Unlock()
+			return err
 		}
 
-		return nil
-	} else {
-		//更新bus该方向信息
-		for _, s := range busdir.Stations {
-			s.Buses = make([]*RunningBus, 0)
-			for _, rbus := range cllresp.Data.Bus {
-				if s.Order == rbus.Order {
-					//status
-					if rbus.Distance == 0 {
-						rbus.Status = "1"
-					} else {
-						rbus.Status = "0.5"
-					}
-					s.Buses = append(s.Buses, rbus)
+		busdir.l.Unlock()
+	}
+
+	return nil
+}
+******************************************************/
+
+func (b *CllBus) loadBuslineDirInfo(lineid, dirid string) (*CllLineDirBaseInfo, error) {
+	cllresp := &CllLineDirBaseInfo{}
+
+	//加载信息
+	httreq, err := b.CityInfo.getHttpRequest(URL_CLL_BUS_URL, lineid, dirid)
+	if err != nil {
+		return cllresp, err
+	}
+
+	err = httptool.HttpDoJsonr(httreq, cllresp)
+	if err != nil {
+		return cllresp, err
+	}
+
+	return cllresp, nil
+}
+
+func (b *CllBus) freshBuslineDir(lineid, dirid string) error {
+	//初始化
+	curtime := time.Now().Unix()
+	bl := b.BusLines[lineid]
+	busdir, _ := bl.getBusDir(dirid)
+
+	//更新bus该方向信息
+	cllresp, err := b.loadBuslineDirInfo(lineid, dirid)
+	if err != nil {
+		return err
+	}
+
+	for _, s := range busdir.Stations {
+		s.Buses = make([]*RunningBus, 0)
+		for _, rbus := range cllresp.Data.Bus {
+			if s.Order == rbus.Order {
+				//status
+				if rbus.Distance == 0 {
+					rbus.Status = "1"
+				} else {
+					rbus.Status = "0.5"
 				}
+				s.Buses = append(s.Buses, rbus)
 			}
 		}
 	}

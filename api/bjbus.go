@@ -101,6 +101,7 @@ func (b *BJBusSess) initBusLineDirs(lineid string) error {
 	return nil
 }
 
+/*******************************************************
 func (b *BJBusSess) FreshBusline(lineid string) error {
 	busline := b.BusLines[lineid]
 
@@ -113,17 +114,12 @@ func (b *BJBusSess) FreshBusline(lineid string) error {
 
 	return nil
 }
+*******************************************************/
+
 func (b *BJBusSess) freshBuslineDir(lineid, dirid string) error {
-	bl := b.BusLines[lineid]
-
-	busdir, _ := bl.getBusDir(dirid)
-	busdir.l.Lock()
-	defer busdir.l.Unlock()
-
 	curtime := time.Now().Unix()
-	if curtime-busdir.freshTime <= 10 {
-		return nil
-	}
+	bl := b.BusLines[lineid]
+	busdir, _ := bl.getBusDir(dirid)
 
 	//更新该方向bus信息
 	req_url := fmt.Sprintf(URL_BJ_FMT_FRESH_STATION_STATUS, lineid, busdir.ID, 1)
