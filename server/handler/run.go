@@ -17,5 +17,8 @@ func Run() {
 	m.Get(`/rtbus/:city/station/:linenum/:direction`, CllBusSnHandler)
 	m.Get(`/rtbus/:city/bus/:linenum/:direction`, CllRunningBusHandler)
 
+	m.Use(Logger())
+	m.Map(GetNilLogger())
+
 	m.RunOnAddr(":1315")
 }
