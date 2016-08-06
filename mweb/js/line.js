@@ -174,7 +174,7 @@ function refreshStationDiv(divid,station) {
             $("#"+divid).addClass("cd-mylocation");
         }else {
             $("#"+divid).addClass("cd-bus");
-            $("#"+divid).find("cd-icon").attr("src","vendor/images/bus.svg");
+            $("#"+divid).find(".cd-icon").attr("src","vendor/images/bus.svg");
         }
 
         //到站
