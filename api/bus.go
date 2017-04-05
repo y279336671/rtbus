@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+const (
+	BUS_ARRIVING_STATUS        = "0.5"
+	BUS_ARRIVING_FUTURE_STATUS = "1"
+)
+
 type BusLine struct {
 	LineNum   string        `json:"linenum"`
 	Direction []*BusDirInfo `json:"direction"`

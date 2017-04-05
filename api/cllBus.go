@@ -144,9 +144,9 @@ func (b *CllBus) freshBuslineDir(lineid, dirid string) error {
 			if s.Order == rbus.Order {
 				//status
 				if rbus.Distance == 0 {
-					rbus.Status = "1"
+					rbus.Status = BUS_ARRIVING_STATUS
 				} else {
-					rbus.Status = "0.5"
+					rbus.Status = BUS_ARRIVING_FUTURE_STATUS
 				}
 				s.Buses = append(s.Buses, rbus)
 			}

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
-	"time"
 )
 
 var (
@@ -232,7 +231,7 @@ func aibangRequest(reqUrl string, params *url.Values, v interface{}) (err error)
 	req.Header.Add("cid", "1024")
 
 	var resp *http.Response
-	resp, err = NewHttpClient(2 * time.Second).Do(req)
+	resp, err = HttpDo(req)
 	if err != nil {
 		return
 	}

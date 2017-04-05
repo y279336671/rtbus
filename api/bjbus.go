@@ -13,6 +13,12 @@ import (
 )
 
 var (
+	//URL_BJ_HOME               = "http://www.bjbus.com/home/fun_rtbus.php"
+	URL_BJ_HOME                     = "http://www.bjbus.com/home/index.php"
+	URL_BJ_FMT_LINE_DIRECTION       = "http://www.bjbus.com/home/ajax_search_bus_stop_token.php?act=getLineDirOption&selBLine=%s"
+	URL_BJ_FMT_LINE_STATION         = "http://www.bjbus.com/home/ajax_search_bus_stop_token.php?act=getDirStationOption&selBLine=%s&selBDir=%s"
+	URL_BJ_FMT_FRESH_STATION_STATUS = "http://www.bjbus.com/home/ajax_search_bus_stop_token.php?act=busTime&selBLine=%s&selBDir=%s&selBStop=%d"
+
 	REG_BUS_LINE_DIRECTION  = regexp.MustCompile(`<option value="(\d+)">[^\()]+\((\S+?)\)<\/option>`)
 	REG_BUS_STATION         = regexp.MustCompile(`<option value="(\d+)">([^>]+)</option>`)
 	REG_BUS_STATTION_STATUS = regexp.MustCompile(`(?s)<div\s+id="(\d+)(m?)\"><i\s+class="(\w+)"\s+clstag="`)
@@ -155,7 +161,7 @@ func (b *BJBusSess) freshBuslineDir(lineid, dirid string) error {
 				buses_tmp = append(buses_tmp,
 					&RunningBus{
 						Order:  station_index,
-						Status: "1",
+						Status: BUS_ARRIVING_FUTURE_STATUS,
 					})
 				map_cur[station_index] = buses_tmp
 			} else if station_status[2] == "busc" { //即将到站
@@ -167,7 +173,7 @@ func (b *BJBusSess) freshBuslineDir(lineid, dirid string) error {
 				buses_tmp = append(buses_tmp,
 					&RunningBus{
 						Order:  station_index,
-						Status: "0.5",
+						Status: BUS_ARRIVING_STATUS,
 					})
 				map_cur[station_index] = buses_tmp
 			}
@@ -283,4 +289,21 @@ func (b *BJBusSess) refreshToken() error {
 	b.tokentime = curtime
 
 	return nil
+}
+
+func getToken() ([]*http.Cookie, error) {
+	logs.GetBlogger().Info("refresh token...")
+
+	resp, err := http.Get(URL_BJ_HOME)
+	if err != nil {
+		return make([]*http.Cookie, 0), err
+	}
+
+	// //test
+	// for _, c := range resp.Cookies() {
+	// 	fmt.Println(c.Raw)
+	// }
+
+	return resp.Cookies(), nil
+
 }
