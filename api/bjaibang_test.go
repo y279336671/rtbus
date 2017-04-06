@@ -1,5 +1,6 @@
 package api
 
+/*
 import (
 	"github.com/bingbaba/util/logs"
 	"testing"
@@ -26,4 +27,4 @@ func TestBjAiBangRtBus(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-}
+}*/

@@ -2,45 +2,63 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"sync"
-	"time"
 )
 
 const (
-	BUS_ARRIVING_STATUS        = "0.5"
-	BUS_ARRIVING_FUTURE_STATUS = "1"
+	BUS_ARRIVING_STATUS        = "1"
+	BUS_ARRIVING_FUTURE_STATUS = "0.5"
+	SOURCE_CHELAILE            = "cll"
 )
 
+type BusPool struct {
+	CityBusLines map[string]*CityBusLines
+}
+
+type CityBusLines struct {
+	l          sync.Mutex
+	Source     string
+	CityInfo   *CityInfo
+	ByLineName map[string]*BusLine
+}
+
 type BusLine struct {
-	LineNum   string        `json:"linenum"`
-	Direction []*BusDirInfo `json:"direction"`
+	l          sync.Mutex
+	LineNum    string                 `json:"linenum"`
+	LineName   string                 `json:"lineName"`
+	Directions map[string]*BusDirInfo `json:"direction"`
+
+	getRT func(bl *BusLine, dirname string) ([]*RunningBus, error)
 }
 
 type BusDirInfo struct {
-	l          sync.Mutex
-	freshTime  int64
-	Name2Index map[string]int `json:"-"`
+	l         sync.Mutex
+	freshTime int64
 
-	ID        string        `json:"id"`
-	Direction int           `json:"direction,omitempty"`
-	Name      string        `json:"name"`
-	StartSn   string        `json:"startsn,omitempty"`
-	EndSn     string        `json:"endsn,omitempty"`
-	Price     string        `json:"price,omitempty"`
-	SnNum     int           `json:"stationsNum,omitempty"`
-	FirstTime string        `json:"firstTime,omitempty"`
-	LastTime  string        `json:"lastTime,omitempty"`
-	Stations  []*BusStation `json:"stations"`
+	ID           string        `json:"id"`
+	Direction    int           `json:"direction,omitempty"`
+	Name         string        `json:"name"`
+	StartSn      string        `json:"startsn,omitempty"`
+	EndSn        string        `json:"endsn,omitempty"`
+	Price        string        `json:"price,omitempty"`
+	SnNum        int           `json:"stationsNum,omitempty"`
+	FirstTime    string        `json:"firstTime,omitempty"`
+	LastTime     string        `json:"lastTime,omitempty"`
+	Stations     []*BusStation `json:"stations"`
+	RunningBuses []*RunningBus `json:"buses,omitempty"`
 }
 
 type BusStation struct {
-	Order int           `json:"order"`
-	Sn    string        `json:"sn,omitempty"`
-	Buses []*RunningBus `json:"buses,omitempty"`
+	No   int     `json:"order"`
+	Name string  `json:"sn,omitempty"`
+	Lat  float64 `json:"lat,omitempty"`
+	Lon  float64 `json:"lon,omitempty"`
 }
 
 type RunningBus struct {
-	Order    int     `json:"order"`
+	No       int     `json:"order"`
+	Name     string  `json:"-"`
 	Status   string  `json:"status"`
 	BusID    string  `json:"busid,omitempty"`
 	Lat      float64 `json:"lat,omitempty"`
@@ -49,81 +67,81 @@ type RunningBus struct {
 	SyncTime int64   `json:"syncTime,omitempty"`
 }
 
-type RefreshBuslineDir interface {
-	freshBuslineDir(lineid, dirid string) error
-}
-
-func NewBusLine(lineid string) *BusLine {
-	return &BusLine{
-		LineNum:   lineid,
-		Direction: make([]*BusDirInfo, 0),
+func NewBusPool() (bp *BusPool, err error) {
+	bp = &BusPool{
+		CityBusLines: make(map[string]*CityBusLines),
 	}
-}
 
-func (b *BusLine) GetBusDir(dirid string, r RefreshBuslineDir) (*BusDirInfo, error) {
-	busdir, err := b.getBusDir(dirid)
+	//CheLaiLe
+	var cll_cbls []*CityBusLines
+	cll_cbls, err = GetCllAllBusLine()
 	if err != nil {
-		return nil, err
+		return
+	}
+	for _, cllbls := range cll_cbls {
+		cityName := cllbls.CityInfo.Name
+		bp.CityBusLines[cityName] = cllbls
 	}
 
-	busdir.l.Lock()
-	defer busdir.l.Unlock()
-
-	//无需重新加载 仅更新同步时间即可
-	curtime := time.Now().Unix()
-	if curtime-busdir.freshTime < 10 {
-		for _, s := range busdir.Stations {
-			for _, rbus := range s.Buses {
-				rbus.SyncTime = rbus.SyncTime + (curtime - busdir.freshTime)
-			}
-		}
-	} else {
-		err = r.freshBuslineDir(b.LineNum, dirid)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return busdir, nil
-}
-
-func (b *BusLine) getBusDir(dirid string) (*BusDirInfo, error) {
-	for _, busdir := range b.Direction {
-		if busdir.equal(dirid) {
-			return busdir, nil
-		}
-	}
-
-	return nil, errors.New("can't found the direction:" + dirid)
-}
-
-func (b *BusLine) GetRunningBus(dirid string, r RefreshBuslineDir) ([]*BusStation, error) {
-	rbuses := make([]*BusStation, 0)
-
-	busdir, err := b.GetBusDir(dirid, r)
+	//BeiJing
+	var bjbls *CityBusLines
+	bjbls, err = GetAiBangAllLine()
 	if err != nil {
-		return rbuses, err
+		return
+	}
+	bp.CityBusLines["北京"] = bjbls
+
+	return
+}
+
+func (bp *BusPool) GetRT(city, linenum, dirname string) (rbus []*RunningBus, err error) {
+	cbl, found := bp.CityBusLines[city]
+	if !found {
+		err = errors.New(fmt.Sprintf("can't support the city %s", city))
+		return
 	}
 
-	for _, station := range busdir.Stations {
-		if len(station.Buses) > 0 {
-			rbuses = append(rbuses, station)
+	if cbl.Source == SOURCE_CHELAILE {
+		return GetCllLineRT(cbl, linenum, dirname)
+	} else {
+		bl, found := cbl.ByLineName[linenum]
+		if !found {
+			err = errors.New(fmt.Sprintf("can't find the line %s in city %s", linenum, city))
+			return
+		}
+		return bl.getRT(bl, dirname)
+	}
+
+	return
+}
+
+func NewCityBusLines() *CityBusLines {
+	return &CityBusLines{
+		ByLineName: make(map[string]*BusLine),
+	}
+}
+
+func (bl *BusLine) Put(bdi *BusDirInfo) {
+	if bl == nil {
+		return
+	}
+
+	bl.l.Lock()
+	defer bl.l.Unlock()
+	bl.Directions[bdi.Name] = bdi
+}
+
+func (bl *BusLine) GetBusDirInfo(dirname string) (*BusDirInfo, bool) {
+	for bdi_name, bdi := range bl.Directions {
+		//fmt.Printf("%+v\n", bdi)
+		if dirname == fmt.Sprintf("%d", bdi.Direction) || dirname == bdi_name {
+			return bdi, true
 		}
 	}
 
-	return rbuses, nil
+	return nil, false
 }
 
-func (s *BusDirInfo) getSnDesc() string {
-	return s.StartSn + "-" + s.EndSn
-}
-
-func (d *BusDirInfo) equal(dirid string) bool {
-	if d.ID == dirid ||
-		d.Name == dirid ||
-		dirid == d.getSnDesc() {
-		return true
-	} else {
-		return false
-	}
+func (bdi *BusDirInfo) GetDirName() string {
+	return fmt.Sprintf("%s-%s", bdi.Stations[0].Name, bdi.Stations[len(bdi.Stations)-1].Name)
 }

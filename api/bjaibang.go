@@ -7,7 +7,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 	"sync"
+	"time"
 )
 
 var (
@@ -16,11 +19,6 @@ var (
 	AIBANG_API_URL      = `http://mc.aibang.com/aiguang/bjgj.c`
 	AIBANG_REALTIME_URL = `http://bjgj.aibang.com:8899/bus.php`
 )
-
-type BJAiBangBusSess struct {
-	BusLines map[string]*BusLine
-	l        sync.Mutex
-}
 
 type AiBangAllLineResp struct {
 	XMLName     xml.Name `xml:"root"`
@@ -91,62 +89,134 @@ type AiBangBus struct {
 	Lon                 string `xml:"y"`
 }
 
-func NewBJAiBangBusSess() (*BJAiBangBusSess, error) {
-	b := &BJAiBangBusSess{
-		BusLines: make(map[string]*BusLine),
-	}
-
-	err := b.getAiBangAllLine()
-	if err != nil {
-		return b, errors.New("get token failed:" + err.Error())
-	} else {
-		return b, nil
-	}
-}
-
-func (b *BJAiBangBusSess) getAiBangAllLine() error {
-	b.l.Lock()
-	defer b.l.Unlock()
+func GetAiBangAllLine() (bjbls *CityBusLines, err error) {
+	bjbls = NewCityBusLines()
 
 	allline := &AiBangAllLineResp{}
 	var params *url.Values = &url.Values{}
 	params.Set("m", "checkUpdate")
 	params.Set("version", "1")
-	err := aibangRequest(AIBANG_API_URL, params, allline)
+	err = aibangRequest(AIBANG_API_URL, params, allline)
 	if err != nil {
-		return err
+		return
 	}
 
+	var rateLimit chan bool = make(chan bool, 50)
 	var wg sync.WaitGroup
 	for _, line := range allline.Lines {
+		rateLimit <- true
+
 		wg.Add(1)
 		go func(id string) {
-			defer wg.Done()
-			err := b.getline(id)
+			defer func() {
+				<-rateLimit
+				wg.Done()
+			}()
+
+			abline, err := getAiBangLine(id)
 			if err != nil {
 				fmt.Println(err)
+			}
+
+			bjbls.l.Lock()
+			defer bjbls.l.Unlock()
+			if bl, found := bjbls.ByLineName[abline.ShortName]; found {
+				bl.Put(NewBusDirInfoByABLine(abline))
+			} else {
+				bjbls.ByLineName[abline.ShortName] = NewBusLineByABLine(abline)
 			}
 		}(line.ID)
 	}
 
+	//wait complete
 	wg.Wait()
+	close(rateLimit)
 
-	/*_, found := b.BusLines[lineid]
-	if !found {
-		err := b.initBusline(lineid)
-		if err != nil {
-			return nil, err
+	return
+}
+
+func NewBusLineByABLine(line *AiBangLine) (bl *BusLine) {
+	bdi := NewBusDirInfoByABLine(line)
+	if bdi == nil {
+		return
+	}
+	bdi.Direction = 1
+
+	return &BusLine{
+		LineNum:  line.ShortName,
+		LineName: line.ShortName,
+		Directions: map[string]*BusDirInfo{
+			bdi.Name: bdi,
+		},
+		getRT: GetAiBangLineRT,
+	}
+}
+
+func NewBusDirInfoByABLine(line *AiBangLine) (bdi *BusDirInfo) {
+	sNum := len(line.Stations)
+	if sNum == 0 {
+		return
+	}
+
+	firstS := line.Stations[0]
+	lastS := line.Stations[sNum-1]
+
+	var price string
+	if line.TotalPrice == 0 {
+		price = line.Ticket
+	} else {
+		price = fmt.Sprintf("%.0f", line.TotalPrice)
+	}
+
+	var firsrt_time, last_time string
+	start_end_time := strings.SplitN(line.Time, "-", 2)
+	firsrt_time = start_end_time[0]
+	if len(start_end_time) > 1 {
+		last_time = start_end_time[1]
+	}
+
+	bdi = &BusDirInfo{
+		ID:        line.ID,
+		Direction: 0,
+		StartSn:   firstS.No,
+		EndSn:     lastS.No,
+		Price:     price,
+		SnNum:     sNum,
+		FirstTime: firsrt_time,
+		LastTime:  last_time,
+		Stations:  convertABLineStation(line.Stations),
+	}
+
+	bdi.Name = bdi.GetDirName()
+	return
+}
+
+func convertABLineStation(abss []*AiBangLineStation) []*BusStation {
+	var err error
+
+	bss := make([]*BusStation, len(abss))
+	for i, abs := range abss {
+		bs := &BusStation{
+			Name: abs.Name,
 		}
-	}*/
 
-	return nil
+		//StationNo
+		bs.No, err = strconv.Atoi(abs.No)
+		if err != nil {
+			bs.No = i + 1
+		}
+
+		//lat lon
+		bs.Lat, _ = strconv.ParseFloat(abs.Lat, 10)
+		bs.Lon, _ = strconv.ParseFloat(abs.Lon, 10)
+
+		bss[i] = bs
+	}
+
+	return bss
 }
 
-func (b *BJAiBangBusSess) Print() {
-
-}
-
-func (b *BJAiBangBusSess) getline(id string) (err error) {
+func getAiBangLine(id string) (line *AiBangLine, err error) {
 	var params *url.Values = &url.Values{}
 	params.Set("m", "update")
 	params.Set("id", id)
@@ -158,7 +228,7 @@ func (b *BJAiBangBusSess) getline(id string) (err error) {
 	}
 
 	//decrypt
-	line := lineResp.AiBangLine
+	line = lineResp.AiBangLine
 	key := fmt.Sprintf(AIBANG_RAW_KEY_FMT, id)
 	line.ShortName, _ = Rc4DecodeString(key, line.ShortName)
 	line.LineName, _ = Rc4DecodeString(key, line.LineName)
@@ -171,16 +241,23 @@ func (b *BJAiBangBusSess) getline(id string) (err error) {
 		station.Lat, _ = Rc4DecodeString(key, station.Lat)
 	}
 
-	line.Print()
+	//fmt.Printf("%+v\n", line.Stations)
 
-	return nil
+	return
 }
 
-func (b *BJAiBangBusSess) getlineRealTime(id, no string) (err error) {
+func GetAiBangLineRT(bl *BusLine, dirname string) (rbus []*RunningBus, err error) {
+	bdi, found := bl.GetBusDirInfo(dirname)
+	if !found {
+		err = errors.New(fmt.Sprintf("can't find the direction %s in BJ line %s", dirname, bl.LineNum))
+		return
+	}
+
+	curtime := time.Now().Unix()
 	var params *url.Values = &url.Values{}
 	params.Set("city", "北京")
-	params.Set("id", id)
-	params.Set("no", no)
+	params.Set("id", bdi.ID)
+	params.Set("no", "1")
 	params.Set("type", "2")
 	params.Set("encrpt", "1")
 	params.Set("versionid", "2")
@@ -191,7 +268,8 @@ func (b *BJAiBangBusSess) getlineRealTime(id, no string) (err error) {
 		return
 	}
 
-	for _, bus := range linert.Data {
+	rbus = make([]*RunningBus, len(linert.Data))
+	for i, bus := range linert.Data {
 		//fmt.Printf("bus:%+v\n", bus)
 		rawkey := fmt.Sprintf(AIBANG_RAW_KEY_FMT, bus.GT)
 		bus.Lat, _ = Rc4DecodeString(rawkey, bus.Lat)
@@ -203,24 +281,22 @@ func (b *BJAiBangBusSess) getlineRealTime(id, no string) (err error) {
 		bus.StationDistance, _ = Rc4DecodeString(rawkey, bus.StationDistance)
 		bus.StationArrTime, _ = Rc4DecodeString(rawkey, bus.StationArrTime)
 
-		fmt.Printf("%+v\n", bus)
+		//fmt.Printf("%+v\n", bus)
+
+		rbus[i] = &RunningBus{Name: bus.NextStationName, BusID: bus.ID, SyncTime: curtime}
+		rbus[i].No, _ = strconv.Atoi(bus.NextStationNum)
+		rbus[i].Lat, _ = strconv.ParseFloat(bus.Lat, 10)
+		rbus[i].Lng, _ = strconv.ParseFloat(bus.Lon, 10)
+
+		if bus.NextStationDistance == "0" || bus.NextStationDistance == "-1" {
+			rbus[i].Status = BUS_ARRIVING_STATUS
+			rbus[i].Distance = 0
+		} else {
+			rbus[i].Status = BUS_ARRIVING_FUTURE_STATUS
+			rbus[i].Distance, _ = strconv.Atoi(bus.NextStationDistance)
+		}
 	}
 	return
-}
-
-func (bl *AiBangLine) Print() {
-	fmt.Printf("id:%s, shortname:%s, linename: %s, distance:%f, ticket:%s, totalPrice:%f, time:%s, type:%s\n",
-		bl.ID, bl.ShortName, bl.LineName,
-		bl.Distince, bl.Ticket, bl.TotalPrice,
-		bl.Time, bl.Type)
-	//fmt.Printf("coord:%s", bl.Coord)
-
-	for i, station := range bl.Stations {
-		fmt.Printf("id:%s[%d] stationName:%s, stationNo:%s, Lon:%s, Lat:%s\n",
-			bl.ID, i, station.Name,
-			station.No, station.Lon, station.Lat,
-		)
-	}
 }
 
 func aibangRequest(reqUrl string, params *url.Values, v interface{}) (err error) {
@@ -246,189 +322,3 @@ func aibangRequest(reqUrl string, params *url.Values, v interface{}) (err error)
 
 	return xml.Unmarshal(data, v)
 }
-
-/*func (b *BJBusSess) GetBusLine(lineid string) (*BusLine, error) {
-	b.l.Lock()
-	defer b.l.Unlock()
-
-	_, found := b.BusLines[lineid]
-	if !found {
-		err := b.initBusline(lineid)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return b.BusLines[lineid], nil
-}
-
-func (b *BJBusSess) initBusline(lineid string) error {
-	bl := NewBusLine(lineid)
-	b.BusLines[lineid] = bl
-
-	return b.initBusLineDirs(lineid)
-}
-
-func (b *BJBusSess) initBusLineDirs(lineid string) error {
-	req_url := fmt.Sprintf(URL_BJ_FMT_LINE_DIRECTION, lineid)
-
-	//new http req
-	httpreq, err := b.newHttpRequest(req_url)
-	if err != nil {
-		return err
-	}
-
-	//http get
-	id_direction_array, err := httptool.HttpDoAllRegexp(httpreq, REG_BUS_LINE_DIRECTION)
-	if err != nil {
-		return err
-	} else if len(id_direction_array) == 0 {
-		return errors.New("can't get anything of direction info!")
-	}
-
-	busline := b.BusLines[lineid]
-	for _, id_direction := range id_direction_array {
-		busdir := &BusDirInfo{
-			ID:   id_direction[0],
-			Name: id_direction[1],
-		}
-		busline.Direction = append(busline.Direction, busdir)
-
-		//加载公交站信息
-		err := b.loadBusStation(lineid, busdir.ID)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (b *BJBusSess) freshBuslineDir(lineid, dirid string) error {
-	curtime := time.Now().Unix()
-	bl := b.BusLines[lineid]
-	busdir, _ := bl.getBusDir(dirid)
-
-	//更新该方向bus信息
-	req_url := fmt.Sprintf(URL_BJ_FMT_FRESH_STATION_STATUS, lineid, busdir.ID, 1)
-	httpreq, err := b.newHttpRequest(req_url)
-	if err != nil {
-		return err
-	}
-
-	//http get
-	status_resp := &StationStatusResp{}
-	err = httptool.HttpDoJson(httpreq, status_resp)
-	if err != nil {
-		return errors.New("URL:" + req_url + ",error::::" + err.Error())
-	}
-
-	//解析http response
-	station_status_array, err2 := httptool.MatchAll(REG_BUS_STATTION_STATUS, []byte(status_resp.HTML))
-	if err2 != nil {
-		return errors.New("URL:" + req_url + ",error::::" + err2.Error())
-	}
-
-	//当前公交状况
-	map_cur := make(map[int][]*RunningBus)
-	for _, station_status := range station_status_array {
-		station_index, err := strconv.Atoi(station_status[0])
-		if err == nil {
-			if station_status[2] == "buss" { //到站
-				buses_tmp, found := map_cur[station_index]
-				if !found {
-					buses_tmp = make([]*RunningBus, 0)
-				}
-
-				buses_tmp = append(buses_tmp,
-					&RunningBus{
-						Order:  station_index,
-						Status: "1",
-					})
-				map_cur[station_index] = buses_tmp
-			} else if station_status[2] == "busc" { //即将到站
-				buses_tmp, found := map_cur[station_index]
-				if !found {
-					buses_tmp = make([]*RunningBus, 0)
-				}
-
-				buses_tmp = append(buses_tmp,
-					&RunningBus{
-						Order:  station_index,
-						Status: "0.5",
-					})
-				map_cur[station_index] = buses_tmp
-			}
-		}
-	}
-
-	//更新存储
-	for i := 0; i < len(busdir.Stations); i++ {
-		order := busdir.Stations[i].Order
-		buses_tmp, found := map_cur[order]
-		if !found {
-			buses_tmp = make([]*RunningBus, 0)
-		}
-		busdir.Stations[i].Buses = buses_tmp
-	}
-
-	busdir.freshTime = curtime
-
-	return nil
-}
-
-func (b *BJBusSess) loadBusStation(linenum, dirid string) error {
-	busline := b.BusLines[linenum]
-
-	for _, busdir := range busline.Direction {
-		if !busdir.equal(dirid) {
-			continue
-		}
-
-		req_url := fmt.Sprintf(URL_BJ_FMT_LINE_STATION, linenum, busdir.ID)
-		httpreq, err := b.newHttpRequest(req_url)
-		if err != nil {
-			return err
-		}
-
-		//http get
-		station_array, err := httptool.HttpDoAllRegexp(httpreq, REG_BUS_STATION)
-		if err != nil {
-			return err
-		} else if len(station_array) == 0 {
-			return errors.New("can'get any statition of the line " + linenum)
-		}
-
-		for _, station := range station_array {
-			order, _ := strconv.Atoi(station[0])
-			busstation := &BusStation{
-				Order: order,
-				Sn:    station[1],
-			}
-
-			busdir.Stations = append(busdir.Stations, busstation)
-		}
-
-		return nil
-	}
-
-	return nil
-}
-
-func (b *BJBusSess) newHttpRequest(req_url string) (*http.Request, error) {
-	httpreq, err := http.NewRequest("GET", req_url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	//刷新token
-	b.refreshToken()
-
-	for _, c := range b.token {
-		httpreq.AddCookie(c)
-	}
-	httpreq.Header.Add("X-Requested-With", "XMLHttpRequest")
-
-	return httpreq, nil
-}
-*/
