@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	BUS_ARRIVING_STATUS        = "1"
-	BUS_ARRIVING_FUTURE_STATUS = "0.5"
+	BUS_ARRIVING_STATUS        = 1
+	BUS_ARRIVING_FUTURE_STATUS = 0.5
 	SOURCE_CHELAILE            = "cll"
 )
 
@@ -59,7 +59,7 @@ type BusStation struct {
 type RunningBus struct {
 	No       int     `json:"order"`
 	Name     string  `json:"-"`
-	Status   string  `json:"status"`
+	Status   float64 `json:"status"`
 	BusID    string  `json:"busid,omitempty"`
 	Lat      float64 `json:"lat,omitempty"`
 	Lng      float64 `json:"lng,omitempty"`
@@ -94,7 +94,41 @@ func NewBusPool() (bp *BusPool, err error) {
 	return
 }
 
-func (bp *BusPool) GetRT(city, linenum, dirname string) (rbus []*RunningBus, err error) {
+func (bp *BusPool) GetStations(city, lineno, dirname string) (bss []*BusStation, err error) {
+	//check wether support the city
+	cbl, found := bp.CityBusLines[city]
+	if !found {
+		err = errors.New(fmt.Sprintf("can't support the city %s", city))
+		return
+	}
+
+	//check wether support the line
+	bl, found := cbl.ByLineName[lineno]
+	if cbl.Source == SOURCE_CHELAILE && !found {
+		_, err = GetCllLineRT(cbl, lineno, dirname)
+		if err != nil {
+			return
+		}
+
+		bl, found = cbl.ByLineName[lineno]
+	}
+	if !found {
+		err = errors.New(fmt.Sprintf("can't find the line %s in city %s", lineno, city))
+		return
+	}
+
+	//check wether find the direction
+	bdi, found := bl.GetBusDirInfo(dirname)
+	if !found {
+		err = errors.New(fmt.Sprintf("can't find %s(%s) in city %s", lineno, dirname, city))
+		return
+	}
+
+	//return
+	return bdi.Stations, nil
+}
+
+func (bp *BusPool) GetRT(city, lineno, dirname string) (rbus []*RunningBus, err error) {
 	cbl, found := bp.CityBusLines[city]
 	if !found {
 		err = errors.New(fmt.Sprintf("can't support the city %s", city))
@@ -102,11 +136,11 @@ func (bp *BusPool) GetRT(city, linenum, dirname string) (rbus []*RunningBus, err
 	}
 
 	if cbl.Source == SOURCE_CHELAILE {
-		return GetCllLineRT(cbl, linenum, dirname)
+		return GetCllLineRT(cbl, lineno, dirname)
 	} else {
-		bl, found := cbl.ByLineName[linenum]
+		bl, found := cbl.ByLineName[lineno]
 		if !found {
-			err = errors.New(fmt.Sprintf("can't find the line %s in city %s", linenum, city))
+			err = errors.New(fmt.Sprintf("can't find the line %s in city %s", lineno, city))
 			return
 		}
 		return bl.getRT(bl, dirname)

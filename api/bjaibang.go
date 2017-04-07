@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -115,15 +116,21 @@ func GetAiBangAllLine() (bjbls *CityBusLines, err error) {
 
 			abline, err := getAiBangLine(id)
 			if err != nil {
-				fmt.Println(err)
+				LOGGER.Error("init BJ lineid %s failed!", id)
 			}
 
 			bjbls.l.Lock()
 			defer bjbls.l.Unlock()
 			if bl, found := bjbls.ByLineName[abline.ShortName]; found {
-				bl.Put(NewBusDirInfoByABLine(abline))
+				bdi := NewBusDirInfoByABLine(abline)
+				if bdi != nil {
+					bl.Put(bdi)
+				}
 			} else {
-				bjbls.ByLineName[abline.ShortName] = NewBusLineByABLine(abline)
+				bl := NewBusLineByABLine(abline)
+				if bl != nil {
+					bjbls.ByLineName[abline.ShortName] = bl
+				}
 			}
 		}(line.ID)
 	}
@@ -155,6 +162,7 @@ func NewBusLineByABLine(line *AiBangLine) (bl *BusLine) {
 func NewBusDirInfoByABLine(line *AiBangLine) (bdi *BusDirInfo) {
 	sNum := len(line.Stations)
 	if sNum == 0 {
+		LOGGER.Warn("can't find the any station of line %s from aibang", line.LineName)
 		return
 	}
 
@@ -296,7 +304,21 @@ func GetAiBangLineRT(bl *BusLine, dirname string) (rbus []*RunningBus, err error
 			rbus[i].Distance, _ = strconv.Atoi(bus.NextStationDistance)
 		}
 	}
+
+	sort.Sort(SortRunningBus(rbus))
 	return
+}
+
+type SortRunningBus []*RunningBus
+
+func (rb SortRunningBus) Len() int      { return len(rb) }
+func (rb SortRunningBus) Swap(i, j int) { rb[i], rb[j] = rb[j], rb[i] }
+func (rb SortRunningBus) Less(i, j int) bool {
+	if rb[i].No == rb[j].No {
+		return rb[i].Status < rb[j].Status
+	} else {
+		return rb[i].No < rb[j].No
+	}
 }
 
 func aibangRequest(reqUrl string, params *url.Values, v interface{}) (err error) {

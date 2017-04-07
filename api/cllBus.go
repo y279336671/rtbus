@@ -75,6 +75,9 @@ func GetCllLineRT(cbl *CityBusLines, lineno, dirid string) (rbus []*RunningBus, 
 	if !hasInit {
 		rbus = bdi.RunningBuses
 	} else { //fresh
+		bl.l.Lock()
+		defer bl.l.Unlock()
+
 		var cdd *CllLineDirData
 		cdd, err = getCllLineDirData(cbl.CityInfo.ID, bdi.ID, lineno)
 		if err != nil {
