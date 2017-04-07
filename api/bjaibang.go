@@ -155,7 +155,6 @@ func NewBusLineByABLine(line *AiBangLine) (bl *BusLine) {
 		Directions: map[string]*BusDirInfo{
 			bdi.Name: bdi,
 		},
-		getRT: GetAiBangLineRT,
 	}
 }
 

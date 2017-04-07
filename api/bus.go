@@ -28,8 +28,6 @@ type BusLine struct {
 	LineNum    string                 `json:"linenum"`
 	LineName   string                 `json:"lineName"`
 	Directions map[string]*BusDirInfo `json:"direction"`
-
-	getRT func(bl *BusLine, dirname string) ([]*RunningBus, error)
 }
 
 type BusDirInfo struct {
@@ -37,6 +35,7 @@ type BusDirInfo struct {
 	freshTime int64
 
 	ID           string        `json:"id"`
+	OtherDirIDs  []string      `json:"-"`
 	Direction    int           `json:"direction,omitempty"`
 	Name         string        `json:"name"`
 	StartSn      string        `json:"startsn,omitempty"`
@@ -102,18 +101,13 @@ func (bp *BusPool) GetStations(city, lineno, dirname string) (bss []*BusStation,
 		return
 	}
 
-	//check wether support the line
-	bl, found := cbl.ByLineName[lineno]
-	if cbl.Source == SOURCE_CHELAILE && !found {
-		_, err = GetCllLineRT(cbl, lineno, dirname)
-		if err != nil {
-			return
-		}
-
-		bl, found = cbl.ByLineName[lineno]
+	var bl *BusLine
+	if cbl.Source == SOURCE_CHELAILE {
+		bl, err = getCllBusLine(cbl, lineno)
+	} else {
+		bl, err = cbl.getBusLine(lineno)
 	}
-	if !found {
-		err = errors.New(fmt.Sprintf("can't find the line %s in city %s", lineno, city))
+	if err != nil {
 		return
 	}
 
@@ -138,15 +132,30 @@ func (bp *BusPool) GetRT(city, lineno, dirname string) (rbus []*RunningBus, err 
 	if cbl.Source == SOURCE_CHELAILE {
 		return GetCllLineRT(cbl, lineno, dirname)
 	} else {
-		bl, found := cbl.ByLineName[lineno]
-		if !found {
-			err = errors.New(fmt.Sprintf("can't find the line %s in city %s", lineno, city))
+		var bl *BusLine
+		bl, err = cbl.getBusLine(lineno)
+		if err != nil {
 			return
 		}
-		return bl.getRT(bl, dirname)
+		return GetAiBangLineRT(bl, dirname)
 	}
 
 	return
+}
+
+func (cbl *CityBusLines) hasInit(lineno string) bool {
+	_, found := cbl.ByLineName[lineno]
+	return found
+}
+
+func (cbl *CityBusLines) getBusLine(lineno string) (*BusLine, error) {
+	bl, found := cbl.ByLineName[lineno]
+	if !found {
+		return nil, errors.New(fmt.Sprintf("can't get the %s line %s info!", cbl.CityInfo.Name, lineno))
+	} else {
+		return bl, nil
+	}
+
 }
 
 func NewCityBusLines() *CityBusLines {

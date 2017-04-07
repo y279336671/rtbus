@@ -58,55 +58,34 @@ func GetCllAllBusLine() (cbls []*CityBusLines, err error) {
 func GetCllLineRT(cbl *CityBusLines, lineno, dirid string) (rbus []*RunningBus, err error) {
 	//busline
 	var bl *BusLine
-	var hasInit bool
-	bl, hasInit, err = getCllBusLine(cbl, lineno, dirid)
+	bl, err = getCllBusLine(cbl, lineno)
 	if err != nil {
 		return
 	}
 
-	//BusDirInfo
+	//dirinfo
 	bdi, found := bl.GetBusDirInfo(dirid)
 	if !found {
 		err = errors.New(fmt.Sprintf("can't find the direction %s in %s line %s", dirid, cbl.CityInfo.Name, bl.LineNum))
 		return
 	}
 
-	//hasInit
-	if !hasInit {
-		rbus = bdi.RunningBuses
-	} else { //fresh
-		bl.l.Lock()
-		defer bl.l.Unlock()
-
-		var cdd *CllLineDirData
-		cdd, err = getCllLineDirData(cbl.CityInfo.ID, bdi.ID, lineno)
-		if err != nil {
-			return
-		}
-
-		rbus = cdd.Bus
-		bdi.RunningBuses = cdd.Bus
-	}
-
-	return
+	return bdi.RunningBuses, nil
 }
 
-func getCllBusLine(cbl *CityBusLines, lineno, dirid string) (bl *BusLine, hasInit bool, err error) {
+func getCllBusLine(cbl *CityBusLines, lineno string) (*BusLine, error) {
 	cbl.l.Lock()
 	defer cbl.l.Unlock()
 
-	//init
-	if bl, hasInit = cbl.ByLineName[lineno]; !hasInit {
-		bl, err = getCllLine(cbl, lineno)
-		if err != nil {
-			return
-		}
-		cbl.ByLineName[lineno] = bl
+	inited := cbl.hasInit(lineno)
+	if !inited {
+		return newCllBusLine(cbl.CityInfo.ID, lineno)
+	} else {
+		return cbl.getBusLine(lineno)
 	}
-	return
 }
 
-func getCllLineDirData(cityid, lineid, lineno string) (cdd *CllLineDirData, err error) {
+func getNewestCllBusDirInfo(cityid, lineid, lineno string) (bdi *BusDirInfo, err error) {
 	curtime := time.Now().UnixNano() / 1000000
 	reqUrl := URL_CLL_BUS_URL +
 		"?" +
@@ -130,7 +109,15 @@ func getCllLineDirData(cityid, lineid, lineno string) (cdd *CllLineDirData, err 
 		return
 	}
 
-	cdd = cllresp.Data
+	//fmt.Println(ToJsonString(cllresp))
+	cdd := cllresp.Data
+	bdi = cdd.getBusDirInfo()
+	bdi.ID = lineid
+
+	for _, oline := range cdd.Otherlines {
+		bdi.OtherDirIDs = append(bdi.OtherDirIDs, oline.LineId)
+	}
+
 	return
 }
 
@@ -147,14 +134,13 @@ type CllLineSearchResp struct {
 	} `json:"data"`
 }
 
-func getCllLine(cbl *CityBusLines, lineno string) (bl *BusLine, err error) {
-	city := cbl.CityInfo
+func newCllBusLine(cityid, lineno string) (bl *BusLine, err error) {
 	curtime := time.Now().UnixNano() / 1000000
 	reqUrl := fmt.Sprintf(
 		FMT_CLL_URL_SEARCH,
 		lineno,
 		curtime, curtime,
-		city.ID,
+		cityid,
 	)
 	//fmt.Println(reqUrl)
 
@@ -175,15 +161,12 @@ func getCllLine(cbl *CityBusLines, lineno string) (bl *BusLine, err error) {
 		return
 	}
 
-	var cdd *CllLineDirData
+	var bdi *BusDirInfo
 	lineid := cllresp.Data.Lines[0].LineId
-	cdd, err = getCllLineDirData(city.ID, lineid, lineno)
+	bdi, err = getNewestCllBusDirInfo(cityid, lineid, lineno)
 	if err != nil {
 		return
 	}
-
-	//BusDirInfo
-	bdi := cdd.getBusDirInfo()
 
 	//BusLine
 	bl = &BusLine{
@@ -196,16 +179,13 @@ func getCllLine(cbl *CityBusLines, lineno string) (bl *BusLine, err error) {
 
 	//other line
 	//fmt.Printf("%+v\n", cdd.Otherlines)
-	if len(cdd.Otherlines) > 0 {
-		lineid2 := cdd.Otherlines[0].LineId
-		var cdd2 *CllLineDirData
-		cdd2, err = getCllLineDirData(city.ID, lineid2, lineno)
+	for _, olineid := range bdi.OtherDirIDs {
+		var obdi *BusDirInfo
+		obdi, err = getNewestCllBusDirInfo(cityid, olineid, lineno)
 		if err != nil {
 			return
 		}
-
-		bdi2 := cdd2.getBusDirInfo()
-		bl.Directions[bdi2.GetDirName()] = bdi2
+		bl.Directions[obdi.GetDirName()] = obdi
 	}
 
 	return
@@ -215,6 +195,7 @@ func (cdd *CllLineDirData) getBusDirInfo() (bdi *BusDirInfo) {
 	bdi = cdd.Line
 	bdi.Stations = cdd.Stations
 	bdi.RunningBuses = cdd.Bus
+	bdi.OtherDirIDs = make([]string, 0)
 
 	curtime := time.Now().Unix()
 	for _, rb := range bdi.RunningBuses {

@@ -27,7 +27,7 @@ func TestQingDaoCllBus(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rbuses, err := bp.GetRT("青岛", "643", "0")
+	rbuses, err := bp.GetRT("青岛", "318", "0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +43,7 @@ func TestGetBusStation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	bss, err := bp.GetStations("青岛", "643", "0")
+	bss, err := bp.GetStations("青岛", "318", "0")
 	if err != nil {
 		t.Fatal(err)
 	}
