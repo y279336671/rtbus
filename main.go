@@ -28,22 +28,18 @@ func main() {
 		logger.Info("Query %s %s %s ...", line[0], line[1], line[2])
 
 		//线路-各公交站
-		bss, err := bp.GetStations(line[0], line[1], line[2])
+		bdi, err := bp.GetBusLineDirInfo(line[0], line[1], line[2])
 		if err != nil {
 			logger.Error("%v", err)
 		}
-		for _, bs := range bss {
-			logger.Info("%+v", bs)
-		}
+		logger.Info("%s", api.ToJsonString(bdi))
 
 		//线路-到站情况
 		rbuses, err := bp.GetRT(line[0], line[1], line[2])
 		if err != nil {
 			logger.Error("%v", err)
 		}
-		for _, rbus := range rbuses {
-			logger.Info("%+v", rbus)
-		}
+		logger.Info("%s", api.ToJsonString(rbuses))
 
 		logger.Info("Query %s %s %s over!", line[0], line[1], line[2])
 	}

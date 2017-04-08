@@ -1,24 +1,22 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
 )
 
-func Run() {
+func Run(port int) {
 	//martini
 	m := martini.Classic()
 	m.Use(render.Renderer())
-	m.Get("/rtbus/bj/direction/:linenum", BJBusLineHandler)
-	m.Get("/rtbus/bj/station/:linenum/:direction", BJBusSnHandler)
-	m.Get("/rtbus/bj/bus/:linenum/:direction", BJRunningBusHandler)
 
-	m.Get(`/rtbus/:city/direction/:linenum`, CllBusLineHandler)
-	m.Get(`/rtbus/:city/station/:linenum/:direction`, CllBusSnHandler)
-	m.Get(`/rtbus/:city/bus/:linenum/:direction`, CllRunningBusHandler)
+	m.Get(`/rtbus/:city/:linenum`, BusLineHandler)
+	m.Get(`/rtbus/:city/:linenum/:direction`, BusDirHandler)
+	m.Get(`/rtbus/:city/:linenum/:direction/bus`, RunningBusHandler)
 
 	m.Use(Logger())
 	m.Map(GetNilLogger())
 
-	m.RunOnAddr(":1315")
+	m.RunOnAddr(fmt.Sprintf("%s:%d", "127.0.0.1", port))
 }

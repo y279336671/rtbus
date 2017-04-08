@@ -35,7 +35,7 @@ type BusDirInfo struct {
 	freshTime int64
 
 	ID           string        `json:"id"`
-	OtherDirIDs  []string      `json:"-"`
+	OtherDirIDs  []string      `json:"otherDirIds"`
 	Direction    int           `json:"direction,omitempty"`
 	Name         string        `json:"name"`
 	StartSn      string        `json:"startsn,omitempty"`
@@ -93,7 +93,7 @@ func NewBusPool() (bp *BusPool, err error) {
 	return
 }
 
-func (bp *BusPool) GetStations(city, lineno, dirname string) (bss []*BusStation, err error) {
+func (bp *BusPool) GetBusLineInfo(city, lineno string) (bl *BusLine, err error) {
 	//check wether support the city
 	cbl, found := bp.CityBusLines[city]
 	if !found {
@@ -101,25 +101,31 @@ func (bp *BusPool) GetStations(city, lineno, dirname string) (bss []*BusStation,
 		return
 	}
 
-	var bl *BusLine
 	if cbl.Source == SOURCE_CHELAILE {
-		bl, err = getCllBusLine(cbl, lineno)
+		return getCllBusLine(cbl, lineno)
 	} else {
-		bl, err = cbl.getBusLine(lineno)
+		return cbl.getBusLine(lineno)
 	}
+}
+
+func (bp *BusPool) GetBusLineDirInfo(city, lineno, dirname string) (bdi *BusDirInfo, err error) {
+	//get bus line
+	var bl *BusLine
+	bl, err = bp.GetBusLineInfo(city, lineno)
 	if err != nil {
 		return
 	}
 
 	//check wether find the direction
-	bdi, found := bl.GetBusDirInfo(dirname)
+	var found bool
+	bdi, found = bl.GetBusDirInfo(dirname)
 	if !found {
 		err = errors.New(fmt.Sprintf("can't find %s(%s) in city %s", lineno, dirname, city))
 		return
 	}
 
 	//return
-	return bdi.Stations, nil
+	return bdi, nil
 }
 
 func (bp *BusPool) GetRT(city, lineno, dirname string) (rbus []*RunningBus, err error) {

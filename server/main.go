@@ -8,6 +8,7 @@ import (
 
 var (
 	DEBUG = flag.Bool("debug", false, "the debug module")
+	PORT  = flag.Int("port", 1318, "the listen port")
 )
 
 func main() {
@@ -20,5 +21,5 @@ func main() {
 		panic(err)
 	}
 
-	handler.Run()
+	handler.Run(*PORT)
 }

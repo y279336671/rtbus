@@ -37,6 +37,7 @@ func TestQingDaoCllBus(t *testing.T) {
 	}
 }
 
+/*
 func TestGetBusStation(t *testing.T) {
 	bp, err := NewBusPool()
 	if err != nil {
@@ -61,3 +62,4 @@ func TestGetBusStation(t *testing.T) {
 		fmt.Printf("%+v\n", bs)
 	}
 }
+*/
