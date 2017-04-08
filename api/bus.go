@@ -181,9 +181,11 @@ func (bl *BusLine) Put(bdi *BusDirInfo) {
 }
 
 func (bl *BusLine) GetBusDirInfo(dirname string) (*BusDirInfo, bool) {
-	for bdi_name, bdi := range bl.Directions {
+	for dirkey, bdi := range bl.Directions {
 		//fmt.Printf("%+v\n", bdi)
-		if dirname == fmt.Sprintf("%d", bdi.Direction) || dirname == bdi_name {
+		if dirname == fmt.Sprintf("%d", bdi.Direction) ||
+			dirname == bdi.GetDirName() ||
+			dirkey == dirname {
 			return bdi, true
 		}
 	}

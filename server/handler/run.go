@@ -18,5 +18,5 @@ func Run(port int) {
 	m.Use(Logger())
 	m.Map(GetNilLogger())
 
-	m.RunOnAddr(fmt.Sprintf("%s:%d", "127.0.0.1", port))
+	m.RunOnAddr(fmt.Sprintf(":%d", port))
 }

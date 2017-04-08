@@ -187,8 +187,8 @@ func NewBusDirInfoByABLine(line *AiBangLine) (bdi *BusDirInfo) {
 		ID:          line.ID,
 		Direction:   0,
 		OtherDirIDs: []string{"1"},
-		StartSn:     firstS.No,
-		EndSn:       lastS.No,
+		StartSn:     firstS.Name,
+		EndSn:       lastS.Name,
 		Price:       price,
 		SnNum:       sNum,
 		FirstTime:   firsrt_time,
@@ -196,7 +196,7 @@ func NewBusDirInfoByABLine(line *AiBangLine) (bdi *BusDirInfo) {
 		Stations:    convertABLineStation(line.Stations),
 	}
 
-	bdi.Name = bdi.GetDirName()
+	bdi.Name = line.ShortName
 	return
 }
 
