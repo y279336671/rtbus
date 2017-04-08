@@ -194,5 +194,5 @@ func (bl *BusLine) GetBusDirInfo(dirname string) (*BusDirInfo, bool) {
 }
 
 func (bdi *BusDirInfo) GetDirName() string {
-	return fmt.Sprintf("%s-%s", bdi.Stations[0].Name, bdi.Stations[len(bdi.Stations)-1].Name)
+	return fmt.Sprintf("%s-%s", bdi.StartSn, bdi.EndSn)
 }
