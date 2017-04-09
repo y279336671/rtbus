@@ -92,6 +92,14 @@ type AiBangBus struct {
 
 func GetAiBangAllLine() (bjbls *CityBusLines, err error) {
 	bjbls = NewCityBusLines()
+	bjbls.CityInfo = &CityInfo{
+		Code:   "010",
+		ID:     "010",
+		Name:   "北京",
+		Hot:    1,
+		PinYin: "beijing",
+		Subway: 0,
+	}
 
 	allline := &AiBangAllLineResp{}
 	var params *url.Values = &url.Values{}
@@ -147,8 +155,8 @@ func NewBusLineByABLine(line *AiBangLine) (bl *BusLine) {
 	if bdi == nil {
 		return
 	}
-	bdi.Direction = 1
-	bdi.OtherDirIDs = []string{"0"}
+	bdi.Direction = 0
+	bdi.OtherDirIDs = []string{"1"}
 
 	return &BusLine{
 		LineNum:  line.ShortName,
@@ -185,7 +193,7 @@ func NewBusDirInfoByABLine(line *AiBangLine) (bdi *BusDirInfo) {
 
 	bdi = &BusDirInfo{
 		ID:          line.ID,
-		Direction:   0,
+		Direction:   1,
 		OtherDirIDs: []string{"1"},
 		StartSn:     firstS.Name,
 		EndSn:       lastS.Name,

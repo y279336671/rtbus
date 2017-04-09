@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"fmt"
+	"github.com/xuebing1110/location"
 	"sync"
 )
 
@@ -79,7 +80,12 @@ func NewBusPool() (bp *BusPool, err error) {
 	}
 	for _, cllbls := range cll_cbls {
 		cityName := cllbls.CityInfo.Name
-		bp.CityBusLines[cityName] = cllbls
+		citycode := location.GetCitycode(location.MustParseCity(cityName))
+		if citycode == "" {
+			bp.CityBusLines[cityName] = cllbls
+		} else {
+			bp.CityBusLines[citycode] = cllbls
+		}
 	}
 
 	//BeiJing
@@ -88,7 +94,8 @@ func NewBusPool() (bp *BusPool, err error) {
 	if err != nil {
 		return
 	}
-	bp.CityBusLines["北京"] = bjbls
+	citycode := location.GetCitycode(location.MustParseCity("北京"))
+	bp.CityBusLines[citycode] = bjbls
 
 	return
 }
@@ -96,6 +103,10 @@ func NewBusPool() (bp *BusPool, err error) {
 func (bp *BusPool) GetBusLineInfo(city, lineno string) (bl *BusLine, err error) {
 	//check wether support the city
 	cbl, found := bp.CityBusLines[city]
+	if !found {
+		city = location.GetCitycode(location.MustParseCity(city))
+		cbl, found = bp.CityBusLines[city]
+	}
 	if !found {
 		err = errors.New(fmt.Sprintf("can't support the city %s", city))
 		return
@@ -130,6 +141,10 @@ func (bp *BusPool) GetBusLineDirInfo(city, lineno, dirname string) (bdi *BusDirI
 
 func (bp *BusPool) GetRT(city, lineno, dirname string) (rbus []*RunningBus, err error) {
 	cbl, found := bp.CityBusLines[city]
+	if !found {
+		city = location.GetCitycode(location.MustParseCity(city))
+		cbl, found = bp.CityBusLines[city]
+	}
 	if !found {
 		err = errors.New(fmt.Sprintf("can't support the city %s", city))
 		return
