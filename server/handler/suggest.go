@@ -5,18 +5,30 @@ import (
 	"github.com/martini-contrib/render"
 	"github.com/xuebing1110/location/amap"
 	"github.com/xuebing1110/rtbus/api"
+	"net/http"
 	"strings"
 	"sync"
 )
 
+type NearestBusStation struct {
+	City        string                `json:"city"`
+	CityName    string                `json:"cityname"`
+	StationName string                `json:"sn"`
+	Lines       []*BusLineDirOverview `json:"lines"`
+}
+
 type BusLineDirOverview struct {
-	LineNo    string            `json:"lineno"`
-	Direction int               `json:"linedir"`
-	Another   string            `json:"another"`
-	StartSN   string            `json:"startsn"`
-	EndSn     string            `json:"endsn"`
-	Buses     []*api.RunningBus `json:"buses"`
-	IsSupport bool              `json:"issupport"`
+	LineNo     string            `json:"lineno"`
+	Direction  int               `json:"linedir"`
+	AnotherDir string            `json:"another_dir"`
+	StartSn    string            `json:"startsn,omitempty"`
+	EndSn      string            `json:"endsn,omitempty"`
+	Price      string            `json:"price,omitempty"`
+	SnNum      int               `json:"stationsNum,omitempty"`
+	FirstTime  string            `json:"firstTime,omitempty"`
+	LastTime   string            `json:"lastTime,omitempty"`
+	Buses      []*api.RunningBus `json:"buses"`
+	IsSupport  bool              `json:"issupport"`
 }
 
 var (
@@ -29,9 +41,44 @@ func init() {
 	amapClient.HttpClient = api.DEFAULT_HTTP_CLIENT
 }
 
-func BusLineSuggest(params martini.Params, r render.Render) {
+func BusLineOverview(params martini.Params, r render.Render) {
+	city := params["city"]
+	linenos := params["linenos"]
+	sn := params["station"]
+
+	var lock sync.Mutex
+	var wg sync.WaitGroup
+	var bldos = make([]*BusLineDirOverview, 0)
+	var lineno_array = strings.Split(linenos, ",")
+	for _, lineno := range lineno_array {
+		wg.Add(1)
+		go func(lineno string) {
+			defer wg.Done()
+			bldo := GetBusLineDirOverview(city, lineno, sn, true)
+
+			lock.Lock()
+			defer lock.Unlock()
+			bldos = append(bldos, bldo)
+		}(lineno)
+	}
+	wg.Wait()
+
+	r.JSON(200,
+		&Response{
+			0,
+			"OK",
+			bldos,
+		},
+	)
+
+}
+
+func BusLineSuggest(params martini.Params, r render.Render, httpreq *http.Request) {
 	lat := params["lat"]
 	lon := params["lon"]
+
+	httpreq.ParseForm()
+	lazy := httpreq.Form.Get("lazy")
 
 	//nearest bus line
 	req := amap.NewInputtipsRequest(amapClient, "公交车站").
@@ -46,42 +93,60 @@ func BusLineSuggest(params martini.Params, r render.Render) {
 		return
 	}
 
-	bldos := make([]*BusLineDirOverview, 0)
-	for _, tip := range resp.Tips {
+	nbss := make([]*NearestBusStation, 0)
+	for sni, tip := range resp.Tips {
 		sn := strings.TrimRight(tip.Name, "(公交站)")
-		linenames := strings.Split(tip.Address, ";")
+		nbs := &NearestBusStation{
+			City:        req.City,
+			CityName:    req.CityName,
+			StationName: sn,
+		}
 
+		//lazy load
+		var loadBus bool = true
+		if lazy != "" && sni > 0 {
+			loadBus = false
+		}
+
+		var linenos = make([]string, 0)
+		var bldos = make([]*BusLineDirOverview, 0)
 		var lock sync.Mutex
 		var wg sync.WaitGroup
+		linenames := strings.Split(tip.Address, ";")
 		for _, linename := range linenames {
+			//lineno
+			lineno := strings.TrimRight(linename, "线")
+			lineno = strings.TrimRight(lineno, "路")
+			lineno = strings.Replace(lineno, "路内环", "内", 1)
+			lineno = strings.Replace(lineno, "路外环", "外", 1)
+			linenos = append(linenos, lineno)
+
 			wg.Add(1)
-			go func(linename string) {
+			go func(lineno string) {
 				defer wg.Done()
-				bldo := GetBusLineDirOverview(req.City, linename, sn)
+				bldo := GetBusLineDirOverview(req.City, lineno, sn, loadBus)
 
 				lock.Lock()
 				defer lock.Unlock()
 				bldos = append(bldos, bldo)
-			}(linename)
+			}(lineno)
 		}
 
 		wg.Wait()
+		nbs.Lines = bldos
+		nbss = append(nbss, nbs)
 	}
 
 	r.JSON(200,
 		&Response{
 			0,
 			"OK",
-			bldos,
+			nbss,
 		},
 	)
 }
 
-func GetBusLineDirOverview(city, linename, station string) (bldo *BusLineDirOverview) {
-	lineno := strings.TrimRight(linename, "线")
-	lineno = strings.TrimRight(lineno, "路")
-	lineno = strings.Replace(lineno, "路内环", "内", 1)
-	lineno = strings.Replace(lineno, "路外环", "外", 1)
+func GetBusLineDirOverview(city, lineno, station string, loadBus bool) (bldo *BusLineDirOverview) {
 	bldo = &BusLineDirOverview{
 		LineNo:    lineno,
 		IsSupport: false,
@@ -96,10 +161,15 @@ func GetBusLineDirOverview(city, linename, station string) (bldo *BusLineDirOver
 
 	bldo.IsSupport = true
 	bldo.Direction = bdi.Direction
-	bldo.StartSN = bdi.StartSn
+	bldo.StartSn = bdi.StartSn
 	bldo.EndSn = bdi.EndSn
+	bldo.Price = bdi.Price
+	bldo.SnNum = bdi.SnNum
+	bldo.FirstTime = bdi.FirstTime
+	bldo.LastTime = bdi.LastTime
+
 	if len(bdi.OtherDirIDs) > 0 {
-		bldo.Another = bdi.OtherDirIDs[0]
+		bldo.AnotherDir = bdi.OtherDirIDs[0]
 	}
 
 	//get station index
@@ -111,16 +181,19 @@ func GetBusLineDirOverview(city, linename, station string) (bldo *BusLineDirOver
 		}
 	}
 
-	rbuses, err := BusTool.GetRT(city, lineno, dirid)
-	if err != nil {
-		logger.Warn("%v", err)
-	} else {
-		bldo.Buses = make([]*api.RunningBus, 0)
-		for _, rbus := range rbuses {
-			if rbus.No <= stationIndex {
-				bldo.Buses = append(bldo.Buses, rbus)
-			} else {
-				break
+	//get running buses
+	if loadBus {
+		rbuses, err := BusTool.GetRT(city, lineno, dirid)
+		if err != nil {
+			logger.Warn("%v", err)
+		} else {
+			bldo.Buses = make([]*api.RunningBus, 0)
+			for _, rbus := range rbuses {
+				if rbus.No <= stationIndex {
+					bldo.Buses = append(bldo.Buses, rbus)
+				} else {
+					break
+				}
 			}
 		}
 	}

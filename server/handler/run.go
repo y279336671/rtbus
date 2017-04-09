@@ -12,6 +12,7 @@ func Run(port int) {
 	m.Use(render.Renderer())
 
 	m.Get(`/rtbus/v2/suggest/:lat/:lon`, BusLineSuggest)
+	m.Get(`/rtbus/v2/overview/:city/:linenos/:station`, BusLineOverview)
 	m.Get(`/rtbus/v2/line/:city/:linenum`, BusLineHandler)
 	m.Get(`/rtbus/v2/line/:city/:linenum/:direction`, BusDirHandler)
 	m.Get(`/rtbus/v2/line/:city/:linenum/:direction/bus`, RunningBusHandler)
