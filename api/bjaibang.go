@@ -276,6 +276,11 @@ func GetAiBangLineRT(bl *BusLine, dirname string) (rbus []*RunningBus, err error
 	if err != nil {
 		return
 	}
+	if linert.Status != 200 {
+		LOGGER.Error("%s", ToJsonString(linert))
+		err = errors.New(linert.Message)
+		return
+	}
 
 	rbus = make([]*RunningBus, len(linert.Data))
 	for i, bus := range linert.Data {
