@@ -14,6 +14,7 @@ type NearestBusStation struct {
 	City        string                `json:"city"`
 	CityName    string                `json:"cityname"`
 	StationName string                `json:"sn"`
+	LineNos     []string              `json:"linenos"`
 	Lines       []*BusLineDirOverview `json:"lines"`
 }
 
@@ -134,6 +135,7 @@ func BusLineSuggest(params martini.Params, r render.Render, httpreq *http.Reques
 
 		wg.Wait()
 		nbs.Lines = bldos
+		nbs.LineNos = linenos
 		nbss = append(nbss, nbs)
 	}
 
