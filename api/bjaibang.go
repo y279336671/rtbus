@@ -124,7 +124,8 @@ func GetAiBangAllLine() (bjbls *CityBusLines, err error) {
 
 			abline, err := getAiBangLine(id)
 			if err != nil {
-				LOGGER.Error("init BJ lineid %s failed!", id)
+				LOGGER.Error("init BJ lineid %s failed:%v", id, err)
+				return
 			}
 
 			bjbls.l.Lock()

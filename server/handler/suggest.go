@@ -50,18 +50,19 @@ func BusLineOverview(params martini.Params, r render.Render) {
 
 	var lock sync.Mutex
 	var wg sync.WaitGroup
-	var bldos = make([]*BusLineDirOverview, 0)
+
 	var lineno_array = strings.Split(linenos, ",")
-	for _, lineno := range lineno_array {
+	var bldos = make([]*BusLineDirOverview, len(lineno_array))
+	for index, lineno := range lineno_array {
 		wg.Add(1)
-		go func(lineno string) {
+		go func(index int, lineno string) {
 			defer wg.Done()
 			bldo := GetBusLineDirOverview(city, lineno, sn, true)
 
 			lock.Lock()
 			defer lock.Unlock()
-			bldos = append(bldos, bldo)
-		}(lineno)
+			bldos[index] = bldo
+		}(index, lineno)
 	}
 	wg.Wait()
 
@@ -95,12 +96,15 @@ func BusLineSuggest(params martini.Params, r render.Render, httpreq *http.Reques
 		return
 	}
 
+	var city = req.City
+	var cityname = req.CityName
+
 	nbss := make([]*NearestBusStation, 0)
 	for sni, tip := range resp.Tips {
 		sn := strings.TrimRight(tip.Name, "(公交站)")
 		nbs := &NearestBusStation{
-			City:        req.City,
-			CityName:    req.CityName,
+			City:        city,
+			CityName:    cityname,
 			StationName: sn,
 		}
 
@@ -110,28 +114,28 @@ func BusLineSuggest(params martini.Params, r render.Render, httpreq *http.Reques
 			loadBus = false
 		}
 
-		var linenos = make([]string, 0)
-		var bldos = make([]*BusLineDirOverview, 0)
 		var lock sync.Mutex
 		var wg sync.WaitGroup
-		linenames := strings.Split(tip.Address, ";")
-		for _, linename := range linenames {
+		var linenames = strings.Split(tip.Address, ";")
+		var linenos = make([]string, len(linenames))
+		var bldos = make([]*BusLineDirOverview, len(linenames))
+		for index, linename := range linenames {
 			//lineno
 			lineno := strings.TrimRight(linename, "线")
 			lineno = strings.TrimRight(lineno, "路")
 			lineno = strings.Replace(lineno, "路内环", "内", 1)
 			lineno = strings.Replace(lineno, "路外环", "外", 1)
-			linenos = append(linenos, lineno)
+			linenos[index] = lineno
 
 			wg.Add(1)
-			go func(lineno string) {
+			go func(index int, lineno string) {
 				defer wg.Done()
-				bldo := GetBusLineDirOverview(req.City, lineno, sn, loadBus)
+				bldo := GetBusLineDirOverview(city, lineno, sn, loadBus)
 
 				lock.Lock()
 				defer lock.Unlock()
-				bldos = append(bldos, bldo)
-			}(lineno)
+				bldos[index] = bldo
+			}(index, lineno)
 		}
 
 		wg.Wait()
