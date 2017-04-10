@@ -189,13 +189,19 @@ func GetBusLineDirOverview(city, lineno, station string, loadBus bool) (bldo *Bu
 		if err != nil {
 			logger.Warn("%v", err)
 		} else {
-			bldo.Buses = make([]*api.RunningBus, 0)
+			rbs := make([]*api.RunningBus, 0)
 			for _, rbus := range rbuses {
-				if rbus.No <= bldo.SnIndex && bldo.SnIndex == 0 {
-					bldo.Buses = append(bldo.Buses, rbus)
+				if rbus.No <= bldo.SnIndex || bldo.SnIndex == 0 {
+					rbs = append(rbs, rbus)
 				} else {
 					break
 				}
+			}
+
+			//reserve
+			bldo.Buses = make([]*api.RunningBus, 0)
+			for i := len(rbs) - 1; i >= 0; i-- {
+				bldo.Buses = append(bldo.Buses, rbs[i])
 			}
 		}
 	}
