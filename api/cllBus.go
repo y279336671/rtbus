@@ -204,7 +204,13 @@ func (cdd *CllLineDirData) getBusDirInfo() (bdi *BusDirInfo) {
 		} else {
 			rb.Status = BUS_ARRIVING_FUTURE_STATUS
 		}
-		rb.Name = bdi.Stations[rb.No-1].Name
+
+		if len(bdi.Stations) < rb.No {
+			LOGGER.Error("can't get station %s from %s", ToJsonString(rb), ToJsonString(bdi))
+		} else {
+			rb.Name = bdi.Stations[rb.No-1].Name
+		}
+
 		rb.SyncTime = curtime - rb.SyncTime
 	}
 
