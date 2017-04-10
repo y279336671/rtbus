@@ -16,7 +16,7 @@ func init() {
 	var err error
 	BusTool, err = api.NewBusPool()
 	if err != nil {
-		Logger.Error("%v", err)
+		logger.Error("%v", err)
 	}
 }
 
