@@ -26,6 +26,7 @@ type BusLineDirOverview struct {
 	EndSn      string            `json:"endsn,omitempty"`
 	Price      string            `json:"price,omitempty"`
 	SnNum      int               `json:"stationsNum,omitempty"`
+	SnIndex    int               `json:"stationIndex"`
 	FirstTime  string            `json:"firstTime,omitempty"`
 	LastTime   string            `json:"lastTime,omitempty"`
 	Buses      []*api.RunningBus `json:"buses"`
@@ -175,10 +176,9 @@ func GetBusLineDirOverview(city, lineno, station string, loadBus bool) (bldo *Bu
 	}
 
 	//get station index
-	var stationIndex int
 	for _, s := range bdi.Stations {
 		if s.Name == station {
-			stationIndex = s.No
+			bldo.SnIndex = s.No
 			break
 		}
 	}
@@ -191,7 +191,7 @@ func GetBusLineDirOverview(city, lineno, station string, loadBus bool) (bldo *Bu
 		} else {
 			bldo.Buses = make([]*api.RunningBus, 0)
 			for _, rbus := range rbuses {
-				if rbus.No <= stationIndex {
+				if rbus.No <= bldo.SnIndex && bldo.SnIndex == 0 {
 					bldo.Buses = append(bldo.Buses, rbus)
 				} else {
 					break
