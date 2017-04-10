@@ -121,7 +121,7 @@ func BusLineSuggest(params martini.Params, r render.Render, httpreq *http.Reques
 		var bldos = make([]*BusLineDirOverview, len(linenames))
 		for index, linename := range linenames {
 			//lineno
-			lineno_1 = strings.SplitN(linename, "/", 1)
+			lineno_1 := strings.SplitN(linename, "/", 1)
 			lineno := strings.TrimRight(lineno_1[0], "线")
 			lineno = strings.TrimRight(lineno, "路")
 			lineno = strings.Replace(lineno, "路内环", "内", 1)
