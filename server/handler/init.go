@@ -12,12 +12,7 @@ var (
 
 func init() {
 	logger = logs.GetBlogger()
-
-	var err error
-	BusTool, err = api.NewBusPool()
-	if err != nil {
-		logger.Error("%v", err)
-	}
+	BusTool = api.NewBusPoolAsync()
 }
 
 type Response struct {
