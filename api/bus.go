@@ -105,16 +105,13 @@ func NewBusPoolAsync() (bp *BusPool) {
 		CityBusLines: make(map[string]*CityBusLines),
 	}
 
-	var lock sync.Mutex
-	go func() {
-		//CheLaiLe
-		cll_cbls, err := GetCllAllBusLine()
-		if err != nil {
-			LOGGER.Error("%v", err)
-			return
-		}
+	//CheLaiLe
+	cll_cbls, err := GetCllAllBusLine()
+	if err != nil {
+		LOGGER.Error("%v", err)
+		return
+	} else {
 		for _, cllbls := range cll_cbls {
-			lock.Lock()
 			cityName := cllbls.CityInfo.Name
 			citycode := location.GetCitycode(location.MustParseCity(cityName))
 			if citycode == "" {
@@ -122,21 +119,17 @@ func NewBusPoolAsync() (bp *BusPool) {
 			} else {
 				bp.CityBusLines[citycode] = cllbls
 			}
-			lock.Unlock()
 		}
-	}()
+	}
 
+	//BeiJing
 	go func() {
-		//BeiJing
 		bjbls, err := GetAiBangAllLine()
 		if err != nil {
 			LOGGER.Error("%v", err)
 			return
 		}
 		citycode := location.GetCitycode(location.MustParseCity("北京"))
-
-		lock.Lock()
-		defer lock.Unlock()
 		bp.CityBusLines[citycode] = bjbls
 	}()
 
