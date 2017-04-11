@@ -11,11 +11,12 @@ import (
 )
 
 type NearestBusStation struct {
-	City        string                `json:"city"`
-	CityName    string                `json:"cityname"`
-	StationName string                `json:"sn"`
-	LineNos     []string              `json:"linenos"`
-	Lines       []*BusLineDirOverview `json:"lines"`
+	City           string                `json:"city"`
+	CityName       string                `json:"cityname"`
+	StationName    string                `json:"sn"`
+	LineNos        []string              `json:"linenos"`
+	SupoortLineNos []string              `json:"supportlns"`
+	Lines          []*BusLineDirOverview `json:"lines"`
 }
 
 type BusLineDirOverview struct {
@@ -140,8 +141,18 @@ func BusLineSuggest(params martini.Params, r render.Render, httpreq *http.Reques
 		}
 
 		wg.Wait()
+
+		//the count of support line
+		var supportlns = make([]string, 0)
+		for _, bldo := range bldos {
+			if bldo.IsSupport {
+				supportlns = append(supportlns, bldo.LineNo)
+			}
+		}
+
 		nbs.Lines = bldos
 		nbs.LineNos = linenos
+		nbs.SupoortLineNos = supportlns
 		nbss = append(nbss, nbs)
 	}
 
