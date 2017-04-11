@@ -112,6 +112,10 @@ func getNewestCllBusDirInfo(cityid, lineid, lineno string) (bdi *BusDirInfo, err
 	//fmt.Println(ToJsonString(cllresp))
 	cdd := cllresp.Data
 	bdi = cdd.getBusDirInfo()
+	if bdi == nil {
+		err = errors.New(fmt.Sprintf("can't get %s-%s-%s bus info!", cityid, lineid, lineno))
+		return
+	}
 	bdi.ID = lineid
 
 	for _, oline := range cdd.Otherlines {
@@ -193,6 +197,10 @@ func newCllBusLine(cityid, lineno string) (bl *BusLine, err error) {
 
 func (cdd *CllLineDirData) getBusDirInfo() (bdi *BusDirInfo) {
 	bdi = cdd.Line
+	if bdi == nil {
+		return
+	}
+
 	bdi.Stations = cdd.Stations
 	bdi.RunningBuses = cdd.Bus
 	bdi.OtherDirIDs = make([]string, 0)
