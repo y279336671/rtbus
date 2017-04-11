@@ -228,7 +228,7 @@ func (bl *BusLine) Put(bdi *BusDirInfo) {
 
 	bl.l.Lock()
 	defer bl.l.Unlock()
-	bl.Directions[bdi.Name] = bdi
+	bl.Directions[bdi.GetDirName()] = bdi
 }
 
 func (bl *BusLine) GetBusDirInfo(dirname string) (*BusDirInfo, bool) {
