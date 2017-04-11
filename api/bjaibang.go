@@ -195,7 +195,7 @@ func NewBusDirInfoByABLine(line *AiBangLine) (bdi *BusDirInfo) {
 	bdi = &BusDirInfo{
 		ID:          line.ID,
 		Direction:   1,
-		OtherDirIDs: []string{"1"},
+		OtherDirIDs: []string{"0"},
 		StartSn:     firstS.Name,
 		EndSn:       lastS.Name,
 		Price:       price,
