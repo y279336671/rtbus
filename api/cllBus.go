@@ -16,6 +16,10 @@ const (
 	FMT_CLL_URL_SEARCH = `http://web.chelaile.net.cn/api/basesearch/client/clientSearch.action?key=%s&count=3&s=h5&v=3.3.9&userId=browser_%d&h5Id=browser_%d&sign=1&cityId=%s`
 )
 
+func init() {
+	httptool.SetHttpClientTimeOut(3 * time.Second)
+}
+
 type CllBus struct {
 	l        sync.Mutex
 	BusLines map[string]*BusLine
@@ -74,8 +78,8 @@ func GetCllLineRT(cbl *CityBusLines, lineno, dirid string) (rbus []*RunningBus, 
 }
 
 func getCllBusLine(cbl *CityBusLines, lineno string) (*BusLine, error) {
-	cbl.l.Lock()
-	defer cbl.l.Unlock()
+	/*cbl.l.Lock()
+	defer cbl.l.Unlock()*/
 
 	inited := cbl.hasInit(lineno)
 	if !inited {
