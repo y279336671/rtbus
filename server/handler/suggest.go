@@ -142,7 +142,7 @@ func BusLineSuggest(params martini.Params, r render.Render, httpreq *http.Reques
 				lineno = strings.Replace(lineno, "路", "", 1)
 
 				linenos[index] = lineno
-				logger.Info("found %s => %s", linename, lineno)
+				//logger.Info("found %s => %s", linename, lineno)
 
 				wg.Add(1)
 				go func(index int, lineno string) {
@@ -215,9 +215,9 @@ func GetBusLineDirOverview(city, lineno, station string, loadBus bool) (bldo *Bu
 
 	//get running buses
 	if loadBus {
-		logger.Info("getrt %s %s %s", city, lineno, dirid)
+		//logger.Info("getrt %s %s %s", city, lineno, dirid)
 		rbuses, err := BusTool.GetRT(city, lineno, dirid)
-		logger.Info("getrt %s %s %s over!", city, lineno, dirid)
+		//logger.Info("getrt %s %s %s over!", city, lineno, dirid)
 		if err != nil {
 			logger.Warn("%v", err)
 		} else {

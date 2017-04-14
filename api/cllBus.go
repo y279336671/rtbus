@@ -143,6 +143,7 @@ type CllLineSearchResp struct {
 }
 
 func newCllBusLine(cityid, lineno string) (bl *BusLine, err error) {
+	LOGGER.Info("init %s %s ...", cityid, lineno)
 	curtime := time.Now().UnixNano() / 1000000
 	reqUrl := fmt.Sprintf(
 		FMT_CLL_URL_SEARCH,
