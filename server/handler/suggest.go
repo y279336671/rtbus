@@ -100,61 +100,75 @@ func BusLineSuggest(params martini.Params, r render.Render, httpreq *http.Reques
 	var city = req.City
 	var cityname = req.CityName
 
-	nbss := make([]*NearestBusStation, 0)
+	var globalWg sync.WaitGroup
+	nbss := make([]*NearestBusStation, len(resp.Tips))
 	for sni, tip := range resp.Tips {
-		sn := strings.TrimRight(tip.Name, "(公交站)")
-		nbs := &NearestBusStation{
-			City:        city,
-			CityName:    cityname,
-			StationName: sn,
-		}
+		globalWg.Add(1)
 
-		//lazy load
-		var loadBus bool = true
-		if lazy != "" && sni > 0 {
-			loadBus = false
-		}
-
-		var lock sync.Mutex
-		var wg sync.WaitGroup
-		var linenames = strings.Split(tip.Address, ";")
-		var linenos = make([]string, len(linenames))
-		var bldos = make([]*BusLineDirOverview, len(linenames))
-		for index, linename := range linenames {
-			//lineno
-			lineno_1 := strings.SplitN(linename, `/`, 1)
-			lineno := strings.TrimRight(lineno_1[0], "线")
-			lineno = strings.TrimRight(lineno, "路")
-			lineno = strings.Replace(lineno, "路内环", "内", 1)
-			lineno = strings.Replace(lineno, "路外环", "外", 1)
-			linenos[index] = lineno
-
-			wg.Add(1)
-			go func(index int, lineno string) {
-				defer wg.Done()
-				bldo := GetBusLineDirOverview(city, lineno, sn, loadBus)
-
-				lock.Lock()
-				defer lock.Unlock()
-				bldos[index] = bldo
-			}(index, lineno)
-		}
-
-		wg.Wait()
-
-		//the count of support line
-		var supportlns = make([]string, 0)
-		for _, bldo := range bldos {
-			if bldo.IsSupport {
-				supportlns = append(supportlns, bldo.LineNo)
+		go func(sni int, tip *amap.Tip) {
+			defer globalWg.Done()
+			sn := strings.TrimRight(tip.Name, "(公交站)")
+			nbs := &NearestBusStation{
+				City:        city,
+				CityName:    cityname,
+				StationName: sn,
 			}
-		}
 
-		nbs.Lines = bldos
-		nbs.LineNos = linenos
-		nbs.SupoortLineNos = supportlns
-		nbss = append(nbss, nbs)
+			//lazy load
+			var loadBus bool = true
+			if lazy != "" && sni > 0 {
+				loadBus = false
+			}
+
+			var wg sync.WaitGroup
+			var linenames = strings.Split(tip.Address, ";")
+			var linenos = make([]string, len(linenames))
+			var bldos = make([]*BusLineDirOverview, len(linenames))
+			for index, linename := range linenames {
+				if strings.Index(linename, "停运") >= 0 {
+					continue
+				}
+
+				//lineno
+				lineno_1 := strings.SplitN(linename, `/`, -1)
+				lineno := strings.TrimRight(lineno_1[0], "专线车")
+				lineno = strings.TrimRight(lineno, "线")
+				lineno = strings.TrimRight(lineno, "路")
+				lineno = strings.Replace(lineno, "路内环", "内", 1)
+				lineno = strings.Replace(lineno, "路外环", "外", 1)
+				lineno = strings.Replace(lineno, "路大站快车", "大站", 1)
+				lineno = strings.Replace(lineno, "路大站快", "大站", 1)
+				lineno = strings.Replace(lineno, "路快线", "快线", 1)
+				lineno = strings.Replace(lineno, "路", "", 1)
+
+				linenos[index] = lineno
+				logger.Info("found %s => %s", linename, lineno)
+
+				wg.Add(1)
+				go func(index int, lineno string) {
+					defer wg.Done()
+					bldo := GetBusLineDirOverview(city, lineno, sn, loadBus)
+					bldos[index] = bldo
+				}(index, lineno)
+			}
+
+			wg.Wait()
+
+			//the count of support line
+			var supportlns = make([]string, 0)
+			for _, bldo := range bldos {
+				if bldo != nil && bldo.IsSupport {
+					supportlns = append(supportlns, bldo.LineNo)
+				}
+			}
+
+			nbs.Lines = bldos
+			nbs.LineNos = linenos
+			nbs.SupoortLineNos = supportlns
+			nbss[sni] = nbs
+		}(sni, tip)
 	}
+	globalWg.Wait()
 
 	r.JSON(200,
 		&Response{
@@ -201,7 +215,9 @@ func GetBusLineDirOverview(city, lineno, station string, loadBus bool) (bldo *Bu
 
 	//get running buses
 	if loadBus {
+		logger.Info("getrt %s %s %s", city, lineno, dirid)
 		rbuses, err := BusTool.GetRT(city, lineno, dirid)
+		logger.Info("getrt %s %s %s over!", city, lineno, dirid)
 		if err != nil {
 			logger.Warn("%v", err)
 		} else {

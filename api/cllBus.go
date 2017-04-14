@@ -216,7 +216,7 @@ func (cdd *CllLineDirData) getBusDirInfo() (bdi *BusDirInfo) {
 		if rb.No <= 0 || len(bdi.Stations) < rb.No {
 			LOGGER.Error("can't get station %s from %s", ToJsonString(rb), ToJsonString(bdi))
 		} else {
-			fmt.Printf("%d %d", len(bdi.Stations), rb.No-1)
+			// fmt.Printf("%d %d", len(bdi.Stations), rb.No-1)
 			rb.Name = bdi.Stations[rb.No-1].Name
 		}
 
