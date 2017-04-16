@@ -215,10 +215,10 @@ func GetBusLineDirOverview(city, lineno, station string, loadBus bool) (bldo *Bu
 	}
 	if bldo.SnIndex > 0 {
 		// end station
-		if bldo.SnIndex == bdi.SnNum-1 {
+		if bldo.SnIndex == bdi.SnNum {
 			bldo.NextSn = bdi.EndSn
 		} else {
-			bldo.NextSn = bdi.Stations[bldo.SnIndex+1].Name
+			bldo.NextSn = bdi.Stations[bldo.SnIndex].Name
 		}
 	}
 
