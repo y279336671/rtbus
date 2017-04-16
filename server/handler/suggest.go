@@ -25,6 +25,7 @@ type BusLineDirOverview struct {
 	AnotherDir string            `json:"another_dir"`
 	StartSn    string            `json:"startsn,omitempty"`
 	EndSn      string            `json:"endsn,omitempty"`
+	NextSn     string            `json:"nextsn"`
 	Price      string            `json:"price,omitempty"`
 	SnNum      int               `json:"stationsNum,omitempty"`
 	SnIndex    int               `json:"stationIndex"`
@@ -210,6 +211,14 @@ func GetBusLineDirOverview(city, lineno, station string, loadBus bool) (bldo *Bu
 		if s.Name == station {
 			bldo.SnIndex = s.No
 			break
+		}
+	}
+	if bldo.SnIndex > 0 {
+		// end station
+		if bldo.SnIndex == bdi.SnNum-1 {
+			bldo.NextSn = bdi.EndSn
+		} else {
+			bldo.NextSn = bdi.Stations[bldo.SnIndex+1].Name
 		}
 	}
 
