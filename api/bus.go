@@ -236,7 +236,8 @@ func (bl *BusLine) GetBusDirInfo(dirname string) (*BusDirInfo, bool) {
 		//fmt.Printf("%+v\n", bdi)
 		if dirname == fmt.Sprintf("%d", bdi.Direction) ||
 			dirname == bdi.GetDirName() ||
-			dirkey == dirname {
+			dirname == dirkey ||
+			dirname == bdi.ID {
 			return bdi, true
 		}
 	}
