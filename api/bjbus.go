@@ -202,6 +202,7 @@ func (b *BJBusSess) newBusDirInfo(lineno, dindex, dirid string) (bdi *BusDirInfo
 
 	bdi.StartSn = bdi.Stations[0].Name
 	bdi.EndSn = bdi.Stations[len(bdi.Stations)-1].Name
+	bdi.SnNum = len(bdi.Stations)
 
 	return
 }
