@@ -35,6 +35,7 @@ type BusDirInfo struct {
 	l         sync.Mutex
 	freshTime int64
 
+	did          string
 	ID           string        `json:"id"`
 	OtherDirIDs  []string      `json:"otherDirIds"`
 	Direction    int           `json:"direction,omitempty"`
@@ -63,8 +64,8 @@ type RunningBus struct {
 	BusID    string  `json:"busid,omitempty"`
 	Lat      float64 `json:"lat,omitempty"`
 	Lng      float64 `json:"lng,omitempty"`
-	Distance int     `json:"distanceToSc,omitempty"`
-	SyncTime int64   `json:"syncTime,omitempty"`
+	Distance int     `json:"distanceToSc"`
+	SyncTime int64   `json:"syncTime"`
 }
 
 func NewBusPool() (bp *BusPool, err error) {
@@ -151,11 +152,22 @@ func (bp *BusPool) GetBusLineInfo(city, lineno string) (bl *BusLine, err error) 
 	if cbl.Source == SOURCE_CHELAILE {
 		return getCllBusLine(cbl, lineno)
 	} else {
-		return cbl.getBusLine(lineno)
+		bl, err = cbl.getBusLine(lineno)
+
+		//BJ RTBUS
+		if err != nil && city == "010" {
+			return GetBJBusLine(lineno)
+		}
 	}
+
+	return
 }
 
 func (bp *BusPool) GetBusLineDirInfo(city, lineno, dirname string) (bdi *BusDirInfo, err error) {
+	return bp.getBusLineDirInfo(city, lineno, dirname)
+}
+
+func (bp *BusPool) getBusLineDirInfo(city, lineno, dirname string) (bdi *BusDirInfo, err error) {
 	//get bus line
 	var bl *BusLine
 	bl, err = bp.GetBusLineInfo(city, lineno)
@@ -176,6 +188,13 @@ func (bp *BusPool) GetBusLineDirInfo(city, lineno, dirname string) (bdi *BusDirI
 }
 
 func (bp *BusPool) GetRT(city, lineno, dirname string) (rbus []*RunningBus, err error) {
+	defer func() {
+		if err != nil {
+			LOGGER.Info("use BJRTBUS for %s %s ...", lineno, dirname)
+			rbus, err = GetBJBusRT(lineno, dirname)
+		}
+	}()
+
 	cbl, found := bp.CityBusLines[city]
 	if !found {
 		city = location.GetCitycode(location.MustParseCity(city))
@@ -194,6 +213,7 @@ func (bp *BusPool) GetRT(city, lineno, dirname string) (rbus []*RunningBus, err 
 		if err != nil {
 			return
 		}
+
 		return GetAiBangLineRT(bl, dirname)
 	}
 
@@ -237,7 +257,8 @@ func (bl *BusLine) GetBusDirInfo(dirname string) (*BusDirInfo, bool) {
 		if dirname == fmt.Sprintf("%d", bdi.Direction) ||
 			dirname == bdi.GetDirName() ||
 			dirname == dirkey ||
-			dirname == bdi.ID {
+			dirname == bdi.ID ||
+			(bdi.did != "" && dirname == bdi.did) {
 			return bdi, true
 		}
 	}
