@@ -218,8 +218,10 @@ func (cdd *CllLineDirData) getBusDirInfo() (bdi *BusDirInfo) {
 			rb.Status = BUS_ARRIVING_FUTURE_STATUS
 		}
 
-		if rb.No <= 0 || len(bdi.Stations) < rb.No {
-			LOGGER.Error("can't get station %s from %s", ToJsonString(rb), ToJsonString(bdi))
+		if rb.No <= 0 {
+			LOGGER.Warn("the running bus order is le zero: %d!", rb.No)
+		} else if rb.No > len(bdi.Stations) {
+			LOGGER.Warn("the running bus number is too large: %d!", rb.No)
 		} else {
 			// fmt.Printf("%d %d", len(bdi.Stations), rb.No-1)
 			rb.Name = bdi.Stations[rb.No-1].Name
