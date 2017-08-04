@@ -1,0 +1,49 @@
+{
+	"ImportPath": "github.com/xuebing1110/rtbus",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Packages": [
+		"./server/..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/astaxie/beego/logs",
+			"Comment": "v1.7.2",
+			"Rev": "90999717dda6193c6f970eec52e289b0a9e74998"
+		},
+		{
+			"ImportPath": "github.com/bingbaba/util/httptool",
+			"Rev": "83ad3af0b435256fc68163dcd4db6df9eb1f660f"
+		},
+		{
+			"ImportPath": "github.com/bingbaba/util/logs",
+			"Rev": "83ad3af0b435256fc68163dcd4db6df9eb1f660f"
+		},
+		{
+			"ImportPath": "github.com/codegangsta/inject",
+			"Comment": "v1.0-rc1-10-g33e0aa1",
+			"Rev": "33e0aa1cb7c019ccc3fbe049a8262a6403d30504"
+		},
+		{
+			"ImportPath": "github.com/go-martini/martini",
+			"Comment": "v1.0-188-g22fa469",
+			"Rev": "22fa46961aabd2665cf3f1343b146d20028f5071"
+		},
+		{
+			"ImportPath": "github.com/martini-contrib/render",
+			"Rev": "ec18f8345a1181146728238980606fb1d6f40e8c"
+		},
+		{
+			"ImportPath": "github.com/oxtoacart/bpool",
+			"Rev": "4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6"
+		},
+		{
+			"ImportPath": "github.com/xuebing1110/location",
+			"Rev": "42a674d67f5f23130b00ccd217677a41e7ef9be7"
+		},
+		{
+			"ImportPath": "github.com/xuebing1110/location/amap",
+			"Rev": "42a674d67f5f23130b00ccd217677a41e7ef9be7"
+		}
+	]
+}
