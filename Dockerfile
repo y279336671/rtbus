@@ -15,7 +15,7 @@ RUN cp server/log.json /etc/rtbus/log.json
 
 # build
 RUN mkdir -p /app
-RUN go build -o /app/rtbus rtbus/server/main.go
+RUN go build -o /app/rtbus server/main.go
 
 WORKDIR /app
 EXPOSE 1318
