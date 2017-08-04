@@ -14,7 +14,7 @@ RUN mkdir -p /app
 RUN go build -o /app/rtbus server/main.go
 
 # example config
-RUN cp server/log.json /app/log.json
+COPY server/log.json /app/log.json
 
 WORKDIR /app
 EXPOSE 1318
