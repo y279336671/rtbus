@@ -11,7 +11,7 @@ WORKDIR $GOPATH/src/github.com/xuebing1110/rtbus
 
 # example config
 RUN mkdir /etc/rtbus
-RUN cp rtbus/server/log.json /etc/rtbus/log.json
+RUN cp server/log.json /etc/rtbus/log.json
 
 # build
 RUN mkdir -p /app
