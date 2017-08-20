@@ -11,6 +11,7 @@ func Run(port int) {
 	m := martini.Classic()
 	m.Use(render.Renderer())
 
+	m.Get(`/rtbus/v2/cityinfo/:lat/:lon`, GetCityInfoByLocation)
 	m.Get(`/rtbus/v2/suggest/:lat/:lon`, BusLineSuggest)
 	m.Get(`/rtbus/v2/overview/:city/:linenos/:station`, BusLineOverview)
 	m.Get(`/rtbus/v2/line/:city/:linenum`, BusLineHandler)
