@@ -91,7 +91,7 @@ func NewBusPool() (bp *BusPool, err error) {
 
 	//BeiJing
 	var bjbls *CityBusLines
-	bjbls, err = GetAiBangAllLine()
+	bjbls, err = GetBticAllLine()
 	if err != nil {
 		return
 	}
@@ -125,7 +125,7 @@ func NewBusPoolAsync() (bp *BusPool) {
 
 	//BeiJing
 	go func() {
-		bjbls, err := GetAiBangAllLine()
+		bjbls, err := GetBticAllLine()
 		if err != nil {
 			LOGGER.Error("%v", err)
 			return
@@ -190,7 +190,7 @@ func (bp *BusPool) getBusLineDirInfo(city, lineno, dirname string) (bdi *BusDirI
 func (bp *BusPool) GetRT(city, lineno, dirname string) (rbus []*RunningBus, err error) {
 	defer func() {
 		if err != nil {
-			LOGGER.Info("use BJRTBUS for %s %s ...", lineno, dirname)
+			LOGGER.Info("get err(%v), now use BJRTBUS for %s %s ...", err, lineno, dirname)
 			rbus, err = GetBJBusRT(lineno, dirname)
 		}
 	}()
@@ -214,7 +214,7 @@ func (bp *BusPool) GetRT(city, lineno, dirname string) (rbus []*RunningBus, err 
 			return
 		}
 
-		return GetAiBangLineRT(bl, dirname)
+		return GetBticLineRT(bl, dirname)
 	}
 
 	return
