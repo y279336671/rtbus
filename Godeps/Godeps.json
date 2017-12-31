@@ -13,11 +13,11 @@
 		},
 		{
 			"ImportPath": "github.com/bingbaba/util/httptool",
-			"Rev": "83ad3af0b435256fc68163dcd4db6df9eb1f660f"
+			"Rev": "bda9340e8c2398a0f05cf89ff07d6b25bee51d4a"
 		},
 		{
 			"ImportPath": "github.com/bingbaba/util/logs",
-			"Rev": "83ad3af0b435256fc68163dcd4db6df9eb1f660f"
+			"Rev": "bda9340e8c2398a0f05cf89ff07d6b25bee51d4a"
 		},
 		{
 			"ImportPath": "github.com/codegangsta/inject",

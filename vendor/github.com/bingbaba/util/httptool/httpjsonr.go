@@ -34,7 +34,7 @@ func RespJsonr(resp *http.Response, obj interface{}) error {
 
 func respjsonr(resp_body []byte, obj interface{}) error {
 	bodylen := len(resp_body)
-	if string(resp_body[0:2]) != "**" && string(resp_body[bodylen-2:bodylen]) != "##" {
+	if bodylen <= 2 || (string(resp_body[0:2]) != "**" && string(resp_body[bodylen-2:bodylen]) != "##") {
 		return errors.New("parse to jsonr failed:" + string(resp_body))
 	}
 
