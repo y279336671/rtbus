@@ -1,4 +1,4 @@
-# 北京实时公交
+# 实时公交
 ```golang
 package main
 
@@ -52,3 +52,5 @@ func main() {
 }
 
 ```
+# 微信小程序
+![微信小程序](http://img-cdn.bingbaba.com/rtbus/qrcode.jpg)
