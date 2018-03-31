@@ -183,6 +183,11 @@ func (bp *BusPool) getBusLineDirInfo(city, lineno, dirname string) (bdi *BusDirI
 		return
 	}
 
+	// get running buses
+	if len(bdi.RunningBuses) == 0 {
+		bdi.RunningBuses, _ = bp.GetRT(city, lineno, dirname)
+	}
+
 	//return
 	return bdi, nil
 }
